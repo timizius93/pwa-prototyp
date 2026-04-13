@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ENDURO PWA Magazin — Prototyp</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0a0a0a; color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+#app { max-width: 440px; margin: 0 auto; height: 100vh; height: 100dvh; overflow: hidden; position: relative; }
+
+/* Kiosk */
+.kiosk { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.kiosk-header { padding: 28px 24px 12px; display: flex; justify-content: space-between; align-items: center; }
+.kiosk-logo { font-size: 24px; font-weight: 900; letter-spacing: -0.03em; }
+.kiosk-sub { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.3; }
+.btn-compare {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  color: #fff; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: 6px; cursor: pointer; font-family: inherit;
+}
+.featured {
+  margin: 20px 24px; border-radius: 16px; padding: 32px 24px; position: relative;
+  overflow: hidden; cursor: pointer; min-height: 280px; display: flex; flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #0099CC 100%);
+}
+.featured-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; margin-bottom: 4px; }
+.featured-issue { font-size: 11px; opacity: 0.3; }
+.featured-title { font-size: 28px; font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 12px; }
+.featured-desc { font-size: 13px; opacity: 0.6; margin-bottom: 16px; }
+.btn-read {
+  display: inline-flex; align-items: center; gap: 8px; background: #0099CC; color: #fff;
+  padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; border: none; cursor: pointer; font-family: inherit;
+}
+.archive-label { padding: 8px 24px 12px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.3; }
+.archive-grid { display: flex; gap: 14px; padding: 0 24px; }
+.archive-card {
+  flex: 1; border-radius: 12px; padding: 20px 14px; cursor: pointer; position: relative;
+  overflow: hidden; min-height: 160px; display: flex; flex-direction: column; justify-content: flex-end;
+}
+.archive-card.emtb { background: linear-gradient(160deg, #0d1117, #161b22, #238636, #2ea043); }
+.archive-card.gravity { background: linear-gradient(160deg, #1a1a1a, #2d1b4e, #5b2c6f, #e74c3c); }
+.archive-num { font-size: 9px; opacity: 0.4; margin-bottom: 4px; }
+.archive-title { font-size: 13px; font-weight: 800; line-height: 1.2; }
+.archive-season { font-size: 9px; opacity: 0.35; margin-top: 6px; }
+.install-hint {
+  margin: 32px 24px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+}
+.install-icon { font-size: 22px; }
+.install-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.install-desc { font-size: 11px; opacity: 0.4; line-height: 1.4; }
+.offline-badge {
+  padding: 0 24px 32px; text-align: center; font-size: 10px; opacity: 0.25;
+  letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center;
+  justify-content: center; gap: 6px;
+}
+.offline-dot { width: 6px; height: 6px; border-radius: 50%; background: #2ecc71; display: inline-block; }
+
+/* Mountain SVG */
+.mountain-svg { position: absolute; bottom: 0; left: 0; width: 100%; opacity: 0.12; pointer-events: none; }
+
+/* Compare */
+.compare { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 28px 20px; }
+.btn-back { background: none; border: none; color: #0099CC; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 20px; padding: 0; font-family: inherit; }
+.compare-title { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+.compare-sub { font-size: 12px; opacity: 0.4; margin-bottom: 28px; line-height: 1.5; }
+.compare-headers { display: flex; gap: 0; margin-bottom: 20px; }
+.compare-header {
+  flex: 1; padding: 10px 12px; text-align: center;
+}
+.compare-header.portal { background: rgba(255,255,255,0.04); border-radius: 8px 0 0 8px; }
+.compare-header.mag { background: rgba(0,153,204,0.1); border-radius: 0 8px 8px 0; border-left: 1px solid rgba(0,153,204,0.3); }
+.ch-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.4; }
+.ch-label.blue { color: #0099CC; opacity: 1; }
+.ch-name { font-size: 11px; font-weight: 700; margin-top: 2px; }
+.compare-row {
+  margin-bottom: 2px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 14px 16px;
+}
+.cr-feature { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 10px; }
+.cr-cols { display: flex; gap: 12px; }
+.cr-col { flex: 1; font-size: 11px; line-height: 1.5; }
+.cr-col.portal { opacity: 0.5; }
+.cr-col.mag { opacity: 0.85; }
+.cr-divider { width: 1px; background: rgba(255,255,255,0.06); }
+.btn-prototype {
+  display: block; margin: 28px auto 0; background: #0099CC; color: #fff; border: none;
+  padding: 12px 28px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; cursor: pointer; font-family: inherit;
+}
+
+/* Reader */
+.reader { height: 100%; display: flex; flex-direction: column; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.reader-top { padding: 12px 20px 8px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.btn-overview { background: none; border: none; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; opacity: 0.6; padding: 0; font-family: inherit; }
+.page-counter { font-size: 10px; opacity: 0.3; letter-spacing: 0.1em; }
+.progress { display: flex; gap: 3px; padding: 0 20px 6px; flex-shrink: 0; }
+.progress-dot { flex: 1; height: 2px; border-radius: 1px; background: rgba(255,255,255,0.15); transition: background 0.4s ease; }
+.progress-dot.active { background: #0099CC; }
+.page-container { flex: 1; overflow: hidden; position: relative; transition: transform 0.3s ease; }
+.nav-buttons { display: flex; gap: 8px; padding: 8px 20px 16px; flex-shrink: 0; justify-content: center; }
+.btn-nav {
+  flex: 1; max-width: 100px; padding: 10px; background: rgba(255,255,255,0.06);
+  border: none; color: #fff; border-radius: 8px; cursor: pointer; font-size: 18px;
+  opacity: 0.5; font-family: inherit; transition: opacity 0.2s;
+}
+.btn-nav:disabled { opacity: 0.15; cursor: default; background: rgba(255,255,255,0.02); }
+
+/* Pages */
+.page { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.page-cover {
+  height: 100%; display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden; padding: 40px 28px 32px;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #0099CC 100%);
+}
+.cover-header { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+.cover-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+.cover-mag { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; }
+.cover-body { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.cover-title { font-size: 38px; font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 16px; white-space: pre-line; }
+.cover-subtitle { font-size: 15px; line-height: 1.5; opacity: 0.7; max-width: 280px; }
+.cover-footer { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; }
+.cover-issue { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.4; }
+.cover-swipe { font-size: 10px; opacity: 0.3; }
+
+.page-toc { height: 100%; background: #0d0d0d; padding: 40px 28px; display: flex; flex-direction: column; }
+.toc-issue { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.3; margin-bottom: 8px; }
+.toc-title { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 40px; }
+.toc-item { display: flex; align-items: baseline; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); gap: 16px; }
+.toc-num { font-size: 11px; font-weight: 700; color: #0099CC; min-width: 24px; font-variant-numeric: tabular-nums; }
+.toc-label { font-size: 15px; font-weight: 500; flex: 1; line-height: 1.3; }
+.toc-page { font-size: 11px; opacity: 0.25; font-variant-numeric: tabular-nums; }
+
+.page-hero {
+  height: 100%; display: flex; flex-direction: column; padding: 40px 28px 32px;
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+}
+.hero-cat { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 32px; }
+.hero-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.hero-title { font-size: 36px; font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 24px; white-space: pre-line; }
+.hero-intro { font-size: 15px; line-height: 1.7; opacity: 0.65; margin-bottom: 32px; max-width: 320px; }
+.hero-author { display: flex; gap: 20px; align-items: center; }
+.author-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+.author-name { font-size: 13px; font-weight: 600; }
+.author-time { font-size: 11px; opacity: 0.4; }
+
+.page-content { height: 100%; background: #0d0d0d; padding: 40px 24px 32px; overflow-y: auto; }
+.content-headline { font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 24px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.stat-card { text-align: center; padding: 14px 0; background: rgba(255,255,255,0.03); border-radius: 8px; }
+.stat-value { font-size: 22px; font-weight: 900; color: #0099CC; letter-spacing: -0.02em; }
+.stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.4; margin-top: 4px; }
+.content-text { font-size: 14px; line-height: 1.8; opacity: 0.7; margin-bottom: 16px; }
+.pull-quote {
+  margin: 24px 0; padding: 20px 24px; border-left: 3px solid #0099CC;
+  background: rgba(0,153,204,0.05); font-size: 16px; font-weight: 600;
+  font-style: italic; line-height: 1.5; opacity: 0.85;
+}
+
+.page-biketest { height: 100%; background: #0d0d0d; padding: 32px 24px; overflow-y: auto; }
+.bt-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 8px; }
+.bt-brand { font-size: 13px; opacity: 0.4; font-weight: 500; margin-bottom: 4px; }
+.bt-model { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
+.bt-specs { display: flex; gap: 16px; margin-bottom: 24px; font-size: 12px; opacity: 0.5; }
+.bt-rating {
+  display: flex; align-items: center; gap: 16px; padding: 20px;
+  background: linear-gradient(135deg, rgba(0,153,204,0.15), rgba(0,153,204,0.05));
+  border-radius: 12px; margin-bottom: 24px;
+}
+.bt-score { font-size: 44px; font-weight: 900; color: #0099CC; line-height: 1; }
+.bt-winner { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.bt-verdict { font-size: 11px; opacity: 0.5; line-height: 1.4; }
+.score-row { margin-bottom: 10px; }
+.score-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.05em; }
+.score-label { text-transform: uppercase; opacity: 0.6; }
+.score-value { font-weight: 700; }
+.score-track { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); width: 0; }
+.score-fill.high { background: #0099CC; }
+.score-fill.mid { background: #f39c12; }
+.bt-video {
+  padding: 16px 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px;
+  display: flex; align-items: center; gap: 12px; margin-top: 8px;
+}
+.bt-video-icon { font-size: 20px; }
+.bt-video-title { font-size: 12px; font-weight: 600; }
+.bt-video-meta { font-size: 10px; opacity: 0.35; margin-top: 2px; }
+
+.page-fullbleed {
+  height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+  position: relative; overflow: hidden;
+}
+.fullbleed-bg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(180deg, #1a2634 0%, #0a1628 40%, #0d0d0d 100%);
+}
+.fullbleed-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.25; }
+.fullbleed-text { position: relative; z-index: 1; padding: 0 28px 40px; }
+.fullbleed-caption { font-size: 14px; line-height: 1.6; opacity: 0.7; margin-bottom: 8px; font-style: italic; }
+.fullbleed-credit { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.3; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const app = document.getElementById('app');
+let currentView = 'kiosk';
+let currentPage = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let swiping = false;
+
+const PAGES = [
+  { type: 'cover' },
+  { type: 'toc' },
+  { type: 'hero' },
+  { type: 'content' },
+  { type: 'biketest' },
+  { type: 'fullbleed' },
+];
+
+const compareRows = [
+  { feature: 'Erscheinung', portal: 'Täglich, einzelne Artikel', mag: '3–4× pro Jahr, kuratierte Ausgaben' },
+  { feature: 'Layout', portal: 'Blog-Format, einheitliches Template', mag: 'Individuell gestaltet, Editorial Design' },
+  { feature: 'Navigation', portal: 'Scrollen, Klicken', mag: 'Swipe, immersives Blättern' },
+  { feature: 'Multimedia', portal: 'Bilder, eingebettete Videos', mag: 'Fullbleed-Fotos, Animationen, interaktive Grafiken' },
+  { feature: 'SEO', portal: '★★★ Voll indexierbar', mag: '★★☆ Ausgaben indexierbar, Artikel verlinkbar' },
+  { feature: 'Offline', portal: '✗ Nein', mag: '✓ Ganze Ausgaben offline lesbar' },
+  { feature: 'Monetarisierung', portal: 'Display Ads (Banner, etc.)', mag: 'Native Ads, Sponsored Content, Interstitials' },
+  { feature: 'Zielgruppe', portal: 'Schnelle Info-Sucher, SEO-Traffic', mag: 'Treue Leser, tiefes Engagement' },
+];
+
+const mountainSVG = `<svg class="mountain-svg" viewBox="0 0 400 200"><path d="M0,200 L60,80 L120,140 L200,40 L280,120 L340,60 L400,200 Z" fill="white"/><path d="M0,200 L80,120 L160,170 L260,90 L340,150 L400,200 Z" fill="white" opacity="0.5"/></svg>`;
+
+function render() {
+  if (currentView === 'kiosk') renderKiosk();
+  else if (currentView === 'compare') renderCompare();
+  else if (currentView === 'reader') renderReader();
+}
+
+function renderKiosk() {
+  app.innerHTML = `
+    <div class="kiosk">
+      <div class="kiosk-header">
+        <div>
+          <div class="kiosk-logo">ENDURO</div>
+          <div class="kiosk-sub">Magazin</div>
+        </div>
+        <button class="btn-compare" onclick="showCompare()">PWA vs. Portal?</button>
+      </div>
+      <div class="featured" onclick="openReader()">
+        ${mountainSVG}
+        <div style="position:relative;z-index:1">
+          <div class="featured-tag">NEUESTE AUSGABE</div>
+          <div class="featured-issue">#041 · Frühjahr 2026</div>
+        </div>
+        <div style="position:relative;z-index:1">
+          <div class="featured-title">Die besten<br>Trail-Bikes 2026</div>
+          <div class="featured-desc">12 Bikes im großen Vergleichstest</div>
+          <button class="btn-read" onclick="event.stopPropagation(); openReader()">JETZT LESEN</button>
+        </div>
+      </div>
+      <div class="archive-label">ARCHIV</div>
+      <div class="archive-grid">
+        <div class="archive-card emtb" onclick="openReader()">
+          <div class="archive-num">#040</div>
+          <div class="archive-title">E-MTB Vergleichstest</div>
+          <div class="archive-season">Winter 2025</div>
+        </div>
+        <div class="archive-card gravity" onclick="openReader()">
+          <div class="archive-num">#039</div>
+          <div class="archive-title">Gravity Special</div>
+          <div class="archive-season">Herbst 2025</div>
+        </div>
+      </div>
+      <div class="install-hint">
+        <div class="install-icon">📱</div>
+        <div>
+          <div class="install-title">Zum Homescreen hinzufügen</div>
+          <div class="install-desc">Installiere ENDURO als App — kein App Store nötig.</div>
+        </div>
+      </div>
+      <div class="offline-badge">
+        <span class="offline-dot"></span>
+        Offline verfügbar nach Download
+      </div>
+    </div>
+  `;
+}
+
+function renderCompare() {
+  app.innerHTML = `
+    <div class="compare">
+      <button class="btn-back" onclick="showKiosk()">← Zurück</button>
+      <div class="compare-title">News Portal vs. PWA-Magazin</div>
+      <div class="compare-sub">Beide leben im Web — mit komplett unterschiedlichem Zweck und Erlebnis.</div>
+      <div class="compare-headers">
+        <div class="compare-header portal">
+          <div class="ch-label">News Portal</div>
+          <div class="ch-name">enduro-mtb.com</div>
+        </div>
+        <div class="compare-header mag">
+          <div class="ch-label blue">PWA Magazin</div>
+          <div class="ch-name">mag.enduro-mtb.com</div>
+        </div>
+      </div>
+      ${compareRows.map(r => `
+        <div class="compare-row">
+          <div class="cr-feature">${r.feature}</div>
+          <div class="cr-cols">
+            <div class="cr-col portal">${r.portal}</div>
+            <div class="cr-divider"></div>
+            <div class="cr-col mag">${r.mag}</div>
+          </div>
+        </div>
+      `).join('')}
+      <button class="btn-prototype" onclick="openReader()">MAGAZIN-PROTOTYP ANSEHEN</button>
+    </div>
+  `;
+}
+
+function renderReader() {
+  const page = PAGES[currentPage];
+  app.innerHTML = `
+    <div class="reader">
+      <div class="reader-top">
+        <button class="btn-overview" onclick="showKiosk()">← Übersicht</button>
+        <div class="page-counter">${currentPage + 1} / ${PAGES.length}</div>
+      </div>
+      <div class="progress">
+        ${PAGES.map((_, i) => `<div class="progress-dot ${i <= currentPage ? 'active' : ''}"></div>`).join('')}
+      </div>
+      <div class="page-container" id="pageContainer">
+        ${renderPage(page.type)}
+      </div>
+      <div class="nav-buttons">
+        <button class="btn-nav" onclick="prevPage()" ${currentPage === 0 ? 'disabled' : ''}>←</button>
+        <button class="btn-nav" onclick="nextPage()" ${currentPage === PAGES.length - 1 ? 'disabled' : ''}>→</button>
+      </div>
+    </div>
+  `;
+
+  const container = document.getElementById('pageContainer');
+  container.addEventListener('touchstart', onTouchStart, { passive: true });
+  container.addEventListener('touchmove', onTouchMove, { passive: true });
+  container.addEventListener('touchend', onTouchEnd);
+
+  if (page.type === 'biketest') {
+    setTimeout(animateScores, 300);
+  }
+}
+
+function renderPage(type) {
+  if (type === 'cover') return `
+    <div class="page page-cover">
+      ${mountainSVG}
+      <div class="cover-header">
+        <div class="cover-logo">ENDURO</div>
+        <div class="cover-mag">Mountainbike Magazine</div>
+      </div>
+      <div class="cover-body">
+        <div class="cover-title">Die besten\nTrail-Bikes\n2026</div>
+        <div class="cover-subtitle">12 Bikes im großen Vergleichstest</div>
+      </div>
+      <div class="cover-footer">
+        <div class="cover-issue">#041 · Frühjahr 2026</div>
+        <div class="cover-swipe">WISCHEN ZUM LESEN →</div>
+      </div>
+    </div>`;
+
+  if (type === 'toc') return `
+    <div class="page page-toc">
+      <div class="toc-issue">AUSGABE #041</div>
+      <div class="toc-title">Inhalt</div>
+      ${[
+        { num: '01', label: 'Editorial', page: '4' },
+        { num: '02', label: 'Trail-Bike Vergleichstest 2026', page: '8' },
+        { num: '03', label: 'Setup-Guide: Fahrwerk richtig einstellen', page: '34' },
+        { num: '04', label: 'Reise: Madeira Trail Paradise', page: '48' },
+        { num: '05', label: 'Tech Talk: Mullet vs. 29er', page: '62' },
+        { num: '06', label: 'Interview: Ines Thoma', page: '74' },
+      ].map(i => `
+        <div class="toc-item">
+          <span class="toc-num">${i.num}</span>
+          <span class="toc-label">${i.label}</span>
+          <span class="toc-page">${i.page}</span>
+        </div>
+      `).join('')}
+    </div>`;
+
+  if (type === 'hero') return `
+    <div class="page page-hero">
+      <div class="hero-cat">VERGLEICHSTEST</div>
+      <div class="hero-body">
+        <div class="hero-title">12 Trail-Bikes\nim Duell</div>
+        <div class="hero-intro">Wir haben die spannendsten Trail-Bikes der Saison über Monate auf unseren Hometrails und in den Alpen getestet. Das Ergebnis: So gut war die Auswahl noch nie.</div>
+        <div class="hero-author">
+          <div class="author-avatar">RS</div>
+          <div>
+            <div class="author-name">Robin Schmitt</div>
+            <div class="author-time">25 Min Lesezeit</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  if (type === 'content') return `
+    <div class="page page-content">
+      <div class="content-headline">Die Testkriterien</div>
+      <div class="stats-grid">
+        ${[{v:'12',l:'Bikes'},{v:'4.800',l:'Test-km'},{v:'6',l:'Tester'},{v:'142',l:'Trail-Tage'}].map(s => `
+          <div class="stat-card">
+            <div class="stat-value">${s.v}</div>
+            <div class="stat-label">${s.l}</div>
+          </div>
+        `).join('')}
+      </div>
+      <p class="content-text">Unser Trail-Bike-Test folgt einem strengen Protokoll. Jedes Bike durchläuft mindestens 400 Kilometer auf verschiedenen Terrains — von flowigen Hometrails bis zu technisch anspruchsvollen Alpen-Abfahrten.</p>
+      <p class="content-text">Dabei bewerten wir in sechs Kategorien: Uphill-Performance, Downhill-Fähigkeit, Handling, Komfort, Ausstattung und Preis-Leistung. Jede Kategorie wird von mindestens drei Testern unabhängig bewertet.</p>
+      <div class="pull-quote">„So gut war die Auswahl an Trail-Bikes noch nie — die Entscheidung fällt schwerer denn je."</div>
+    </div>`;
+
+  if (type === 'biketest') return `
+    <div class="page page-biketest">
+      <div class="bt-tag">BIKE-TEST</div>
+      <div class="bt-brand">Specialized</div>
+      <div class="bt-model">Stumpjumper EVO</div>
+      <div class="bt-specs"><span>5.499 €</span><span>·</span><span>150/140 mm</span><span>·</span><span>13,4 kg</span></div>
+      <div class="bt-rating">
+        <div class="bt-score">9.2</div>
+        <div>
+          <div class="bt-winner">TESTSIEGER</div>
+          <div class="bt-verdict">Der Alleskönner, der bergauf überrascht und bergab begeistert.</div>
+        </div>
+      </div>
+      ${[{l:'Uphill',v:88},{l:'Downhill',v:94},{l:'Handling',v:92},{l:'Komfort',v:85},{l:'Preis-Leistung',v:78}].map(s => `
+        <div class="score-row">
+          <div class="score-header">
+            <span class="score-label">${s.l}</span>
+            <span class="score-value">${s.v}%</span>
+          </div>
+          <div class="score-track">
+            <div class="score-fill ${s.v >= 90 ? 'high' : 'mid'}" data-width="${s.v}"></div>
+          </div>
+        </div>
+      `).join('')}
+      <div class="bt-video">
+        <div class="bt-video-icon">▶</div>
+        <div>
+          <div class="bt-video-title">Video: Stumpjumper EVO auf dem Trail</div>
+          <div class="bt-video-meta">2:34 · Eingebettetes Video</div>
+        </div>
+      </div>
+    </div>`;
+
+  if (type === 'fullbleed') return `
+    <div class="page page-fullbleed">
+      <div class="fullbleed-bg"></div>
+      <svg class="fullbleed-svg" viewBox="0 0 400 500">
+        <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6b35"/><stop offset="40%" stop-color="#c2185b"/><stop offset="100%" stop-color="#1a2634"/></linearGradient></defs>
+        <rect width="400" height="500" fill="url(#sky)"/>
+        <path d="M0,350 L80,200 L140,280 L220,150 L300,250 L360,180 L400,350 Z" fill="#0a1628"/>
+        <path d="M0,400 L100,300 L180,350 L280,260 L370,330 L400,400 Z" fill="#0d1117"/>
+        <circle cx="320" cy="100" r="30" fill="#ff6b35" opacity="0.8"/>
+      </svg>
+      <div class="fullbleed-text">
+        <div class="fullbleed-caption">Sonnenaufgang am Reschenpass — 6:14 Uhr, perfekte Bedingungen für unseren Fototermin mit dem Testfeld.</div>
+        <div class="fullbleed-credit">Foto: Markus Greber</div>
+      </div>
+    </div>`;
+
+  return '<div class="page" style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.3">Seite nicht verfügbar</div>';
+}
+
+function animateScores() {
+  document.querySelectorAll('.score-fill').forEach((el, i) => {
+    setTimeout(() => { el.style.width = el.dataset.width + '%'; }, i * 100);
+  });
+}
+
+function showKiosk() { currentView = 'kiosk'; render(); }
+function showCompare() { currentView = 'compare'; render(); }
+function openReader() { currentView = 'reader'; currentPage = 0; render(); }
+function nextPage() { if (currentPage < PAGES.length - 1) { currentPage++; render(); } }
+function prevPage() { if (currentPage > 0) { currentPage--; render(); } }
+
+let swipeX = 0;
+function onTouchStart(e) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; swiping = true; }
+function onTouchMove(e) {
+  if (!swiping) return;
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    swipeX = dx;
+    const container = document.getElementById('pageContainer');
+    if (container) container.style.transform = `translateX(${dx * 0.3}px)`;
+  }
+}
+function onTouchEnd() {
+  if (swipeX < -60) nextPage();
+  else if (swipeX > 60) prevPage();
+  else {
+    const container = document.getElementById('pageContainer');
+    if (container) container.style.transform = '';
+  }
+  swipeX = 0; swiping = false;
+}
+
+render();
+</script>
+</body>
+</html>

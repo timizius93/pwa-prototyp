@@ -16,7 +16,7 @@ body {
 /* ─── APP SHELL ──────────────────────────────────────────────────────────── */
 #app {
   width: 100%;
-  max-width: clamp(390px, 100%, 480px);
+  max-width: 100%;
   margin: 0 auto;
   height: 100vh; height: 100dvh;
   overflow: hidden;
@@ -134,7 +134,7 @@ body {
 /* ─── 1. COVER MIT FOTO ──────────────────────────────────────────────────── */
 .page-cover-photo {
   height: 100%; display: flex; flex-direction: column; justify-content: space-between;
-  position: relative; overflow: hidden; padding: 40px 28px 32px;
+  position: relative; overflow: hidden; padding: 40px clamp(28px, 6vw, 80px) 32px;
 }
 .cover-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; pointer-events: none; }
 .cover-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(170deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.78) 100%); pointer-events: none; }
@@ -287,37 +287,99 @@ body {
 .geo-val { font-size: clamp(13px, 3vw, 15px); font-weight: 700; color: #0099CC; font-variant-numeric: tabular-nums; }
 .geo-note { margin-top: 20px; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 11px; opacity: 0.4; line-height: 1.65; }
 
-/* ─── RESPONSIVE: TABLET ─────────────────────────────────────────────────── */
-@media (min-width: 640px) {
-  #app {
-    max-width: 640px;
-    box-shadow: 0 0 80px rgba(0,0,0,0.8);
-  }
-  body { background: #030303; }
+/* ─── RESPONSIVE: TABLET (768px+) ───────────────────────────────────────── */
+@media (min-width: 768px) {
+  /* Textseiten: lesbare Spalte zentriert */
+  .page-toc         { padding: 56px min(10vw, 80px); }
+  .editorial-body   { padding: 12px min(10vw, 80px) 60px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .page-survey      { padding: 48px min(10vw, 80px) 60px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .page-biketest    { padding: 36px min(10vw, 80px) 40px; max-width: 900px; margin: 0 auto; width: 100%; }
 
-  .featured { min-height: 320px; }
-  .editorial-hero-img { height: 280px; }
-  .bt-hero-photo { height: 230px; }
-  .vt-hero-content { padding: 0 36px 44px; }
-  .editorial-body { padding: 8px 36px 56px; }
-  .nav-buttons { padding: 10px 32px 20px; }
-  .btn-nav { font-size: 20px; padding: 12px 24px; max-width: 120px; }
-  .reader-top { padding: 16px 28px 10px; }
-  .progress { padding: 0 28px 8px; }
-  .survey-img-card { padding: 28px 24px; }
-  .survey-img { max-height: 130px; }
-  .geo-chip-btn { padding: 13px; }
+  /* Fotoseiten bekommen mehr Luft am unteren Rand */
+  .vt-hero-content  { padding: 0 min(8vw, 72px) 56px; }
+  .fullbleed-text-real { padding: 0 min(8vw, 72px) 56px; }
+  .cover-z          { padding-left: 0; }
+
+  /* Cover-Schrift wächst */
+  .cover-title      { font-size: clamp(52px, 8vw, 100px); }
+  .cover-subtitle   { font-size: clamp(14px, 2vw, 20px); max-width: 520px; }
+
+  /* TOC */
+  .toc-title        { font-size: clamp(36px, 5vw, 52px); }
+  .toc-label        { font-size: clamp(15px, 2.2vw, 20px); }
+  .toc-sublabel     { font-size: clamp(12px, 1.6vw, 15px); }
+
+  /* Editorial */
+  .editorial-hero-img  { height: clamp(220px, 38vh, 380px); }
+  .editorial-headline  { font-size: clamp(36px, 5.5vw, 56px); }
+  .editorial-lead      { font-size: clamp(16px, 2.2vw, 22px); }
+  .editorial-text      { font-size: clamp(14px, 1.8vw, 17px); }
+
+  /* Survey */
+  .survey-img-card  { padding: 32px 28px; }
+  .survey-img       { max-height: 140px; }
+  .survey-stat-val  { font-size: clamp(28px, 4vw, 40px); }
+  .survey-body-text { font-size: clamp(14px, 1.8vw, 17px); }
+  .survey-pull-quote{ font-size: clamp(16px, 2.2vw, 22px); }
+
+  /* VT Hero */
+  .vt-hero-model    { font-size: clamp(36px, 5.5vw, 62px); }
+  .vt-hero-lead     { font-size: clamp(14px, 1.8vw, 18px); max-width: 600px; }
+  .vt-hero-pill     { font-size: 13px; padding: 6px 14px; }
+
+  /* Biketest */
+  .bt-model         { font-size: clamp(28px, 4vw, 42px); }
+  .bt-hero-photo    { height: clamp(180px, 35vh, 320px); }
+  .bt-score         { font-size: clamp(48px, 7vw, 72px); }
+  .bt-body-text     { font-size: clamp(13px, 1.8vw, 16px); }
+  .bt-quote         { font-size: clamp(13px, 1.8vw, 15px); }
+
+  /* Reader Shell */
+  .reader-top       { padding: 18px 32px 10px; }
+  .progress         { padding: 0 32px 8px; }
+  .nav-buttons      { padding: 10px 32px 20px; gap: 12px; }
+  .btn-nav          { font-size: 20px; padding: 12px 24px; max-width: 120px; }
+
+  /* Kiosk */
+  .featured         { min-height: 360px; margin: 24px 40px; }
+  .featured-title   { font-size: clamp(28px, 4vw, 44px); }
+  .archive-grid     { padding: 0 40px; gap: 20px; }
+  .archive-card     { min-height: 200px; }
+  .kiosk-header     { padding: 32px 40px 16px; }
+  .archive-label    { padding: 12px 40px 14px; }
+  .install-hint     { margin: 36px 40px 24px; }
+  .offline-badge    { padding: 0 40px 36px; }
 }
 
-/* ─── RESPONSIVE: DESKTOP ────────────────────────────────────────────────── */
-@media (min-width: 1024px) {
-  #app { max-width: 720px; }
-  .editorial-hero-img { height: 340px; }
-  .bt-photo-wrap .bt-hero-photo { height: 260px; }
-  .nav-buttons { padding: 12px 40px 24px; }
-  .btn-nav { font-size: 22px; padding: 14px 28px; max-width: 140px; }
-  .reader-top { padding: 20px 36px 12px; }
-  .progress { padding: 0 36px 10px; }
+/* ─── RESPONSIVE: DESKTOP (1200px+) ─────────────────────────────────────── */
+@media (min-width: 1200px) {
+  /* Textseiten: großzügigere Spalte */
+  .editorial-body   { max-width: 1000px; }
+  .page-survey      { max-width: 1000px; }
+  .page-biketest    { max-width: 1000px; }
+
+  /* Cover noch größer */
+  .cover-title      { font-size: clamp(80px, 9vw, 130px); }
+  .editorial-headline { font-size: clamp(52px, 6vw, 72px); }
+  .editorial-lead   { font-size: clamp(18px, 2.2vw, 24px); }
+
+  /* Foto-Seiten: tiefere untere Beschriftung */
+  .vt-hero-content  { padding-bottom: 72px; }
+  .fullbleed-text-real { padding-bottom: 72px; }
+  .fullbleed-caption-real { font-size: clamp(15px, 1.8vw, 19px); }
+
+  .reader-top       { padding: 24px 48px 12px; }
+  .progress         { padding: 0 48px 10px; }
+  .nav-buttons      { padding: 12px 48px 24px; }
+  .btn-nav          { font-size: 22px; padding: 14px 32px; max-width: 160px; }
+  .kiosk-header     { padding: 40px 64px 20px; }
+  .featured         { margin: 28px 64px; min-height: 420px; }
+  .archive-grid     { padding: 0 64px; }
+  .archive-label    { padding: 12px 64px 14px; }
+  .install-hint     { margin: 40px 64px; }
+  .offline-badge    { padding: 0 64px 40px; }
+
+  .geo-chip-btn     { padding: 14px; font-size: 12px; }
 }
 </style>
 </head>

@@ -3,37 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>ENDURO PWA Magazin — Prototyp</title>
+<title>ENDURO Magazin #066 — Das neue Normal</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
+html, body { height: 100%; overflow: hidden; background: #030303; }
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #0a0a0a; color: #fff;
-  -webkit-font-smoothing: antialiased;
+  color: #fff; -webkit-font-smoothing: antialiased;
 }
-#app { max-width: 440px; margin: 0 auto; height: 100vh; height: 100dvh; overflow: hidden; position: relative; }
 
-/* Kiosk */
+/* ─── APP SHELL ──────────────────────────────────────────────────────────── */
+#app {
+  width: 100%;
+  max-width: clamp(390px, 100%, 480px);
+  margin: 0 auto;
+  height: 100vh; height: 100dvh;
+  overflow: hidden;
+  position: relative;
+  background: #0a0a0a;
+}
+
+/* ─── KIOSK ─────────────────────────────────────────────────────────────── */
 .kiosk { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .kiosk-header { padding: 28px 24px 12px; display: flex; justify-content: space-between; align-items: center; }
-.kiosk-logo { font-size: 24px; font-weight: 900; letter-spacing: -0.03em; }
+.kiosk-logo { font-size: clamp(20px, 5vw, 28px); font-weight: 900; letter-spacing: -0.03em; }
 .kiosk-sub { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.3; }
 .btn-compare {
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
   color: #fff; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
   padding: 8px 14px; border-radius: 6px; cursor: pointer; font-family: inherit;
+  white-space: nowrap;
 }
 .featured {
   margin: 20px 24px; border-radius: 16px; padding: 32px 24px; position: relative;
   overflow: hidden; cursor: pointer; min-height: 280px; display: flex; flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #0099CC 100%);
+}
+.featured-bg-img {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 20%; pointer-events: none;
+}
+.featured-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(160deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.75) 100%);
+  border-radius: 16px; pointer-events: none;
 }
 .featured-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; margin-bottom: 4px; }
 .featured-issue { font-size: 11px; opacity: 0.3; }
-.featured-title { font-size: 28px; font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 12px; }
+.featured-title { font-size: clamp(24px, 6vw, 32px); font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 12px; }
 .featured-desc { font-size: 13px; opacity: 0.6; margin-bottom: 16px; }
 .btn-read {
   display: inline-flex; align-items: center; gap: 8px; background: #0099CC; color: #fff;
@@ -46,8 +64,8 @@ body {
   flex: 1; border-radius: 12px; padding: 20px 14px; cursor: pointer; position: relative;
   overflow: hidden; min-height: 160px; display: flex; flex-direction: column; justify-content: flex-end;
 }
-.archive-card.emtb { background: linear-gradient(160deg, #0d1117, #161b22, #238636, #2ea043); }
-.archive-card.gravity { background: linear-gradient(160deg, #1a1a1a, #2d1b4e, #5b2c6f, #e74c3c); }
+.archive-card.trail { background: linear-gradient(160deg, #0d1117, #161b22, #238636, #2ea043); }
+.archive-card.emtb  { background: linear-gradient(160deg, #1a1a1a, #2d1b4e, #5b2c6f, #e74c3c); }
 .archive-num { font-size: 9px; opacity: 0.4; margin-bottom: 4px; }
 .archive-title { font-size: 13px; font-weight: 800; line-height: 1.2; }
 .archive-season { font-size: 9px; opacity: 0.35; margin-top: 6px; }
@@ -65,31 +83,24 @@ body {
 }
 .offline-dot { width: 6px; height: 6px; border-radius: 50%; background: #2ecc71; display: inline-block; }
 
-/* Mountain SVG */
-.mountain-svg { position: absolute; bottom: 0; left: 0; width: 100%; opacity: 0.12; pointer-events: none; }
-
-/* Compare */
+/* ─── COMPARE ────────────────────────────────────────────────────────────── */
 .compare { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 28px 20px; }
 .btn-back { background: none; border: none; color: #0099CC; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 20px; padding: 0; font-family: inherit; }
 .compare-title { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
 .compare-sub { font-size: 12px; opacity: 0.4; margin-bottom: 28px; line-height: 1.5; }
-.compare-headers { display: flex; gap: 0; margin-bottom: 20px; }
-.compare-header {
-  flex: 1; padding: 10px 12px; text-align: center;
-}
+.compare-headers { display: flex; margin-bottom: 20px; }
+.compare-header { flex: 1; padding: 10px 12px; text-align: center; }
 .compare-header.portal { background: rgba(255,255,255,0.04); border-radius: 8px 0 0 8px; }
-.compare-header.mag { background: rgba(0,153,204,0.1); border-radius: 0 8px 8px 0; border-left: 1px solid rgba(0,153,204,0.3); }
+.compare-header.mag    { background: rgba(0,153,204,0.1); border-radius: 0 8px 8px 0; border-left: 1px solid rgba(0,153,204,0.3); }
 .ch-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.4; }
 .ch-label.blue { color: #0099CC; opacity: 1; }
 .ch-name { font-size: 11px; font-weight: 700; margin-top: 2px; }
-.compare-row {
-  margin-bottom: 2px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 14px 16px;
-}
+.compare-row { margin-bottom: 2px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 14px 16px; }
 .cr-feature { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 10px; }
 .cr-cols { display: flex; gap: 12px; }
 .cr-col { flex: 1; font-size: 11px; line-height: 1.5; }
 .cr-col.portal { opacity: 0.5; }
-.cr-col.mag { opacity: 0.85; }
+.cr-col.mag    { opacity: 0.85; }
 .cr-divider { width: 1px; background: rgba(255,255,255,0.06); }
 .btn-prototype {
   display: block; margin: 28px auto 0; background: #0099CC; color: #fff; border: none;
@@ -97,7 +108,7 @@ body {
   letter-spacing: 0.05em; cursor: pointer; font-family: inherit;
 }
 
-/* Reader */
+/* ─── READER SHELL ───────────────────────────────────────────────────────── */
 .reader { height: 100%; display: flex; flex-direction: column; overflow: hidden; user-select: none; -webkit-user-select: none; }
 .reader-top { padding: 12px 20px 8px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 .btn-overview { background: none; border: none; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; opacity: 0.6; padding: 0; font-family: inherit; }
@@ -105,107 +116,209 @@ body {
 .progress { display: flex; gap: 3px; padding: 0 20px 6px; flex-shrink: 0; }
 .progress-dot { flex: 1; height: 2px; border-radius: 1px; background: rgba(255,255,255,0.15); transition: background 0.4s ease; }
 .progress-dot.active { background: #0099CC; }
-.page-container { flex: 1; overflow: hidden; position: relative; transition: transform 0.3s ease; }
+.page-container { flex: 1; overflow: hidden; position: relative; }
+.page-container.swiping { transition: none; }
+.page-container.snap-back { transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .nav-buttons { display: flex; gap: 8px; padding: 8px 20px 16px; flex-shrink: 0; justify-content: center; }
 .btn-nav {
   flex: 1; max-width: 100px; padding: 10px; background: rgba(255,255,255,0.06);
   border: none; color: #fff; border-radius: 8px; cursor: pointer; font-size: 18px;
-  opacity: 0.5; font-family: inherit; transition: opacity 0.2s;
+  opacity: 0.5; font-family: inherit; transition: opacity 0.15s, background 0.15s;
 }
+.btn-nav:hover:not(:disabled) { opacity: 0.9; background: rgba(255,255,255,0.12); }
 .btn-nav:disabled { opacity: 0.15; cursor: default; background: rgba(255,255,255,0.02); }
 
-/* Pages */
+/* ─── BASE PAGE ──────────────────────────────────────────────────────────── */
 .page { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.page-cover {
+
+/* ─── 1. COVER MIT FOTO ──────────────────────────────────────────────────── */
+.page-cover-photo {
   height: 100%; display: flex; flex-direction: column; justify-content: space-between;
   position: relative; overflow: hidden; padding: 40px 28px 32px;
-  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #0099CC 100%);
 }
-.cover-header { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
-.cover-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
-.cover-mag { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; }
-.cover-body { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.cover-title { font-size: 38px; font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 16px; white-space: pre-line; }
-.cover-subtitle { font-size: 15px; line-height: 1.5; opacity: 0.7; max-width: 280px; }
-.cover-footer { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; }
-.cover-issue { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.4; }
-.cover-swipe { font-size: 10px; opacity: 0.3; }
+.cover-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; pointer-events: none; }
+.cover-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(170deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.78) 100%); pointer-events: none; }
+.cover-z { position: relative; z-index: 1; }
+.cover-header-row { display: flex; justify-content: space-between; align-items: center; }
+.cover-logo { font-size: clamp(20px, 5vw, 26px); font-weight: 900; letter-spacing: -0.02em; }
+.cover-mag-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; }
+.cover-issue-tag { display: inline-block; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; background: #0099CC; color: #fff; padding: 3px 10px; border-radius: 4px; font-weight: 700; margin-bottom: 16px; }
+.cover-title { font-size: clamp(40px, 10vw, 52px); font-weight: 900; line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 14px; }
+.cover-subtitle { font-size: clamp(12px, 3vw, 15px); line-height: 1.5; opacity: 0.65; max-width: 300px; }
+.cover-footer-row { display: flex; justify-content: space-between; align-items: flex-end; }
+.cover-issue-info { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.4; }
+.cover-swipe-hint { font-size: 10px; opacity: 0.3; }
 
-.page-toc { height: 100%; background: #0d0d0d; padding: 40px 28px; display: flex; flex-direction: column; }
+/* ─── 2. INHALTSVERZEICHNIS ──────────────────────────────────────────────── */
+.page-toc { height: 100%; background: #0d0d0d; padding: 40px 28px; overflow-y: auto; }
 .toc-issue { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.3; margin-bottom: 8px; }
-.toc-title { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 40px; }
-.toc-item { display: flex; align-items: baseline; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); gap: 16px; }
-.toc-num { font-size: 11px; font-weight: 700; color: #0099CC; min-width: 24px; font-variant-numeric: tabular-nums; }
-.toc-label { font-size: 15px; font-weight: 500; flex: 1; line-height: 1.3; }
-.toc-page { font-size: 11px; opacity: 0.25; font-variant-numeric: tabular-nums; }
+.toc-title { font-size: clamp(28px, 7vw, 38px); font-weight: 900; letter-spacing: -0.03em; margin-bottom: 32px; }
+.toc-item { display: flex; align-items: flex-start; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.06); gap: 16px; }
+.toc-item:last-child { border-bottom: none; }
+.toc-num { font-size: 11px; font-weight: 700; color: #0099CC; min-width: 24px; font-variant-numeric: tabular-nums; padding-top: 2px; }
+.toc-label { font-size: clamp(14px, 3.5vw, 16px); font-weight: 500; flex: 1; line-height: 1.3; }
+.toc-sublabel { font-size: 11px; opacity: 0.35; margin-top: 3px; }
+.toc-page { font-size: 11px; opacity: 0.25; font-variant-numeric: tabular-nums; padding-top: 2px; }
 
-.page-hero {
-  height: 100%; display: flex; flex-direction: column; padding: 40px 28px 32px;
-  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-}
-.hero-cat { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 32px; }
-.hero-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.hero-title { font-size: 36px; font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 24px; white-space: pre-line; }
-.hero-intro { font-size: 15px; line-height: 1.7; opacity: 0.65; margin-bottom: 32px; max-width: 320px; }
-.hero-author { display: flex; gap: 20px; align-items: center; }
-.author-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
-.author-name { font-size: 13px; font-weight: 600; }
-.author-time { font-size: 11px; opacity: 0.4; }
+/* ─── 3. EDITORIAL ───────────────────────────────────────────────────────── */
+.page-editorial { height: 100%; background: #0d0d0d; display: flex; flex-direction: column; overflow: hidden; }
+.editorial-hero-img { width: 100%; height: clamp(180px, 35vw, 260px); object-fit: cover; object-position: center top; flex-shrink: 0; }
+.editorial-hero-fade { height: 52px; background: linear-gradient(transparent, #0d0d0d); margin-top: -52px; position: relative; flex-shrink: 0; }
+.editorial-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 28px 48px; }
+.editorial-cat { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 18px; }
+.editorial-headline { font-size: clamp(30px, 8vw, 42px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 8px; }
+.editorial-subhead { font-size: clamp(13px, 3vw, 15px); opacity: 0.45; margin-bottom: 22px; font-style: italic; }
+.editorial-byline { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; padding-bottom: 22px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.editorial-portrait { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: top; flex-shrink: 0; }
+.editorial-author-name { font-size: 13px; font-weight: 700; }
+.editorial-author-role { font-size: 11px; opacity: 0.4; margin-top: 2px; }
+.editorial-lead { font-size: clamp(14px, 3.5vw, 17px); font-weight: 600; line-height: 1.65; margin-bottom: 22px; color: rgba(255,255,255,0.9); }
+.editorial-text { font-size: clamp(13px, 3vw, 15px); line-height: 1.88; opacity: 0.62; margin-bottom: 18px; }
+.editorial-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 24px 0; }
+.editorial-pull-quote { padding: 18px 0 18px 20px; border-left: 3px solid #0099CC; margin: 24px 0; font-size: clamp(14px, 3.5vw, 17px); font-weight: 600; font-style: italic; line-height: 1.5; color: rgba(255,255,255,0.85); }
+.editorial-signature { font-size: clamp(13px, 3vw, 15px); opacity: 0.5; margin-top: 28px; }
 
-.page-content { height: 100%; background: #0d0d0d; padding: 40px 24px 32px; overflow-y: auto; }
-.content-headline { font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 24px; }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
-.stat-card { text-align: center; padding: 14px 0; background: rgba(255,255,255,0.03); border-radius: 8px; }
-.stat-value { font-size: 22px; font-weight: 900; color: #0099CC; letter-spacing: -0.02em; }
-.stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.4; margin-top: 4px; }
-.content-text { font-size: 14px; line-height: 1.8; opacity: 0.7; margin-bottom: 16px; }
-.pull-quote {
-  margin: 24px 0; padding: 20px 24px; border-left: 3px solid #0099CC;
-  background: rgba(0,153,204,0.05); font-size: 16px; font-weight: 600;
-  font-style: italic; line-height: 1.5; opacity: 0.85;
-}
+/* ─── 4. LESERUMFRAGE ────────────────────────────────────────────────────── */
+.page-survey { height: 100%; background: #0d0d0d; padding: 36px 24px 48px; overflow-y: auto; }
+.survey-headline { font-size: clamp(20px, 5vw, 26px); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+.survey-sub { font-size: 12px; opacity: 0.4; margin-bottom: 24px; line-height: 1.4; }
+.survey-img-card { background: #fff; border-radius: 14px; padding: 24px 20px; margin-bottom: 20px; text-align: center; }
+.survey-img { width: 100%; height: auto; max-height: 110px; object-fit: contain; }
+.survey-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.survey-stat { background: rgba(0,153,204,0.07); border: 1px solid rgba(0,153,204,0.2); border-radius: 10px; padding: 16px 12px; text-align: center; }
+.survey-stat-val { font-size: clamp(22px, 5vw, 28px); font-weight: 900; color: #0099CC; letter-spacing: -0.02em; }
+.survey-stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.45; margin-top: 4px; }
+.survey-body-text { font-size: clamp(13px, 3vw, 15px); line-height: 1.85; opacity: 0.62; margin-bottom: 18px; }
+.survey-pull-quote { margin: 22px 0; padding: 18px 20px; border-left: 3px solid #0099CC; background: rgba(0,153,204,0.05); font-size: clamp(14px, 3.5vw, 17px); font-weight: 600; font-style: italic; line-height: 1.5; opacity: 0.85; }
+.survey-mini-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 20px 0; }
+.survey-mini-stat { text-align: center; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px 6px; }
+.survey-mini-val { font-size: clamp(16px, 4vw, 20px); font-weight: 900; color: #fff; }
+.survey-mini-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.35; margin-top: 3px; line-height: 1.3; }
 
-.page-biketest { height: 100%; background: #0d0d0d; padding: 32px 24px; overflow-y: auto; }
-.bt-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 8px; }
-.bt-brand { font-size: 13px; opacity: 0.4; font-weight: 500; margin-bottom: 4px; }
-.bt-model { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
-.bt-specs { display: flex; gap: 16px; margin-bottom: 24px; font-size: 12px; opacity: 0.5; }
-.bt-rating {
-  display: flex; align-items: center; gap: 16px; padding: 20px;
-  background: linear-gradient(135deg, rgba(0,153,204,0.15), rgba(0,153,204,0.05));
-  border-radius: 12px; margin-bottom: 24px;
+/* ─── 5. FULLBLEED REAL ──────────────────────────────────────────────────── */
+.page-fullbleed-real { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; }
+.fullbleed-img-real { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.fullbleed-grad-real { position: absolute; bottom: 0; left: 0; width: 100%; height: 58%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); }
+.fullbleed-text-real { position: relative; z-index: 1; padding: 0 28px 40px; }
+.fullbleed-caption-real { font-size: clamp(13px, 3vw, 15px); line-height: 1.6; opacity: 0.75; margin-bottom: 8px; font-style: italic; }
+.fullbleed-credit-real { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.3; }
+
+/* ─── 6. VT HERO MIT FOTO ────────────────────────────────────────────────── */
+.page-vt-hero { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; }
+.vt-hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center center; }
+.vt-hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(0deg, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0.15) 100%); }
+.vt-hero-content { position: relative; z-index: 1; padding: 0 28px 36px; }
+.vt-hero-tag { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 6px; }
+.vt-hero-brand { font-size: 12px; opacity: 0.45; margin-bottom: 3px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+.vt-hero-model { font-size: clamp(26px, 6.5vw, 36px); font-weight: 900; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 14px; }
+.vt-hero-lead { font-size: clamp(12px, 3vw, 14px); line-height: 1.65; opacity: 0.68; margin-bottom: 20px; }
+.vt-hero-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.vt-hero-pill { font-size: 11px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); border-radius: 5px; padding: 4px 10px; opacity: 0.85; }
+
+/* ─── 7. BIKETEST ────────────────────────────────────────────────────────── */
+.page-biketest { height: 100%; background: #0d0d0d; padding: 28px 24px 24px; overflow-y: auto; position: relative; }
+.bt-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 6px; }
+.bt-brand { font-size: 12px; opacity: 0.4; font-weight: 500; margin-bottom: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
+.bt-model { font-size: clamp(22px, 5.5vw, 30px); font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; line-height: 1.1; }
+.bt-specs { display: flex; gap: 12px; margin-bottom: 16px; font-size: 12px; opacity: 0.5; flex-wrap: wrap; }
+/* Photo wrapper — tap for geo overlay */
+.bt-photo-wrap { position: relative; cursor: pointer; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.bt-hero-photo { width: 100%; height: clamp(160px, 38vw, 210px); object-fit: cover; object-position: center; display: block; }
+.bt-photo-hint {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  border-radius: 6px; padding: 5px 9px; font-size: 10px; letter-spacing: 0.1em;
+  display: flex; align-items: center; gap: 5px; pointer-events: none;
+  border: 1px solid rgba(255,255,255,0.15);
 }
-.bt-score { font-size: 44px; font-weight: 900; color: #0099CC; line-height: 1; }
-.bt-winner { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.bt-rating { display: flex; align-items: center; gap: 16px; padding: 16px 18px; background: linear-gradient(135deg, rgba(0,153,204,0.18), rgba(0,153,204,0.06)); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(0,153,204,0.2); }
+.bt-score { font-size: clamp(36px, 9vw, 48px); font-weight: 900; color: #0099CC; line-height: 1; letter-spacing: -0.03em; }
+.bt-winner { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
 .bt-verdict { font-size: 11px; opacity: 0.5; line-height: 1.4; }
 .score-row { margin-bottom: 10px; }
-.score-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.05em; }
+.score-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11px; letter-spacing: 0.05em; }
 .score-label { text-transform: uppercase; opacity: 0.6; }
 .score-value { font-weight: 700; }
 .score-track { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
 .score-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); width: 0; }
 .score-fill.high { background: #0099CC; }
-.score-fill.mid { background: #f39c12; }
-.bt-video {
-  padding: 16px 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px;
-  display: flex; align-items: center; gap: 12px; margin-top: 8px;
-}
-.bt-video-icon { font-size: 20px; }
-.bt-video-title { font-size: 12px; font-weight: 600; }
-.bt-video-meta { font-size: 10px; opacity: 0.35; margin-top: 2px; }
+.score-fill.mid  { background: #f39c12; }
+.tops-flops { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0 18px; }
+.tops-box  { background: rgba(0,153,204,0.08); border: 1px solid rgba(0,153,204,0.22); border-radius: 9px; padding: 12px 14px; }
+.flops-box { background: rgba(231,76,60,0.07); border: 1px solid rgba(231,76,60,0.2);  border-radius: 9px; padding: 12px 14px; }
+.tf-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+.tf-label.top  { color: #0099CC; }
+.tf-label.flop { color: #e74c3c; }
+.tf-item { font-size: clamp(11px, 2.5vw, 12px); opacity: 0.8; margin-bottom: 5px; line-height: 1.3; display: flex; gap: 5px; }
+.tf-item::before { content: '·'; color: currentColor; opacity: 0.5; }
+.bt-section-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.35; margin: 22px 0 12px; }
+.bt-quote { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; font-size: clamp(12px, 2.8vw, 13px); line-height: 1.65; font-style: italic; opacity: 0.7; border-left: 2px solid rgba(0,153,204,0.4); }
+.bt-body-text { font-size: clamp(13px, 3vw, 14px); line-height: 1.85; opacity: 0.62; margin-bottom: 14px; }
 
-.page-fullbleed {
-  height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
-  position: relative; overflow: hidden;
-}
-.fullbleed-bg {
+/* ─── GEOMETRIE OVERLAY ──────────────────────────────────────────────────── */
+#geo-modal {
+  display: none;
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(180deg, #1a2634 0%, #0a1628 40%, #0d0d0d 100%);
+  background: rgba(5,5,15,0.97);
+  z-index: 200;
+  flex-direction: column;
+  padding: 28px 24px 40px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: geoSlideUp 0.25s cubic-bezier(0.16,1,0.3,1);
 }
-.fullbleed-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.25; }
-.fullbleed-text { position: relative; z-index: 1; padding: 0 28px 40px; }
-.fullbleed-caption { font-size: 14px; line-height: 1.6; opacity: 0.7; margin-bottom: 8px; font-style: italic; }
-.fullbleed-credit { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.3; }
+#geo-modal.active { display: flex; }
+@keyframes geoSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.geo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.geo-title { font-size: clamp(20px, 5vw, 26px); font-weight: 900; letter-spacing: -0.02em; }
+.geo-close-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; font-family: inherit; display: flex; align-items: center; justify-content: center; }
+.geo-bike-label { font-size: 10px; opacity: 0.35; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 22px; }
+.geo-chip-toggle { display: flex; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+.geo-chip-btn { flex: 1; padding: 11px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; letter-spacing: 0.1em; transition: background 0.2s, color 0.2s; }
+.geo-chip-btn.active { background: rgba(0,153,204,0.25); color: #0099CC; }
+.geo-chip-btn:not(.active) { background: none; color: rgba(255,255,255,0.35); }
+.geo-table { width: 100%; }
+.geo-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.geo-row:last-child { border-bottom: none; }
+.geo-key { font-size: clamp(12px, 3vw, 13px); opacity: 0.5; }
+.geo-val { font-size: clamp(13px, 3vw, 15px); font-weight: 700; color: #0099CC; font-variant-numeric: tabular-nums; }
+.geo-note { margin-top: 20px; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 11px; opacity: 0.4; line-height: 1.65; }
+
+/* ─── RESPONSIVE: TABLET ─────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  #app {
+    max-width: 640px;
+    box-shadow: 0 0 80px rgba(0,0,0,0.8);
+  }
+  body { background: #030303; }
+
+  .featured { min-height: 320px; }
+  .editorial-hero-img { height: 280px; }
+  .bt-hero-photo { height: 230px; }
+  .vt-hero-content { padding: 0 36px 44px; }
+  .editorial-body { padding: 8px 36px 56px; }
+  .nav-buttons { padding: 10px 32px 20px; }
+  .btn-nav { font-size: 20px; padding: 12px 24px; max-width: 120px; }
+  .reader-top { padding: 16px 28px 10px; }
+  .progress { padding: 0 28px 8px; }
+  .survey-img-card { padding: 28px 24px; }
+  .survey-img { max-height: 130px; }
+  .geo-chip-btn { padding: 13px; }
+}
+
+/* ─── RESPONSIVE: DESKTOP ────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  #app { max-width: 720px; }
+  .editorial-hero-img { height: 340px; }
+  .bt-photo-wrap .bt-hero-photo { height: 260px; }
+  .nav-buttons { padding: 12px 40px 24px; }
+  .btn-nav { font-size: 22px; padding: 14px 28px; max-width: 140px; }
+  .reader-top { padding: 20px 36px 12px; }
+  .progress { padding: 0 36px 10px; }
+}
 </style>
 </head>
 <body>
@@ -214,39 +327,72 @@ body {
 <script>
 const app = document.getElementById('app');
 let currentView = 'kiosk';
-let currentPage = 0;
-let touchStartX = 0;
-let touchStartY = 0;
-let swiping = false;
+let currentPage  = 0;
 
+/* ─── Touch-State ────────────────────────────────────────────────────────── */
+let touchStartX   = 0;
+let touchStartY   = 0;
+let swipeX        = 0;
+let swipeDir      = null; // 'h' | 'v' | null  — locked after first 10px movement
+
+/* ─── Bild-Pfade ─────────────────────────────────────────────────────────── */
+const IMG = {
+  coverBg:    'dummie contetn/Vergleichstest/Ghost_Poacha_Best_Enduro_Bike_2026_Test_MAG-3149.jpg',
+  kiosk:      'dummie contetn/Vergleichstest/Ghost_Poacha_Best_Enduro_Bike_2026_Test_MAG-3149.jpg',
+  poachaHero: 'dummie contetn/Vergleichstest/Ghost_Poacha_Best_Enduro_Bike_2026_Test_MAG-2517.jpg',
+  poachaCard: 'dummie contetn/Vergleichstest/Ghost_Poacha_Best_Enduro_Bike_2026_Test_MAG-2840.jpg',
+  poachaFull: 'dummie contetn/Vergleichstest/Ghost_Poacha_Best_Enduro_Bike_2026_Test_MAG-2595.jpg',
+  portrait:   'dummie contetn/Editorial/DI.A-Portrait-Test-Crew-Jury-2022-056 (1).jpg',
+  survey:     'dummie contetn/Editorial/END-Illu-Leserumfrage-2025-Website.png',
+  yeti:       'dummie contetn/Editorial/Yeti_LTE_Best_Enduro_Bike_2026_Test_MAG-3707.jpg',
+};
+
+/* ─── Seiten ─────────────────────────────────────────────────────────────── */
 const PAGES = [
-  { type: 'cover' },
-  { type: 'toc' },
-  { type: 'hero' },
-  { type: 'content' },
-  { type: 'biketest' },
-  { type: 'fullbleed' },
+  { type: 'cover'           },
+  { type: 'toc'             },
+  { type: 'editorial-hero'  },
+  { type: 'editorial-text'  },
+  { type: 'fullbleed-yeti'  },
+  { type: 'vt-hero'         },
+  { type: 'biketest-poacha' },
+  { type: 'fullbleed-poacha'},
 ];
 
+/* ─── Geometrie-Daten Ghost Poacha ──────────────────────────────────────── */
+const GEO = [
+  { label: 'Reach',            low: '490 mm',    high: '496 mm'   },
+  { label: 'Stack',            low: '636 mm',    high: '631 mm'   },
+  { label: 'Lenkwinkel',       low: '63.5°',     high: '64.0°'    },
+  { label: 'Sitzwinkel eff.',  low: '76.0°',     high: '76.0°'    },
+  { label: 'Kettenstrebe',     low: '440 mm',     high: '440 mm'   },
+  { label: 'TL-Höhe',         low: '350 mm',    high: '354 mm'   },
+  { label: 'Radstand',         low: '1.272 mm',  high: '1.265 mm' },
+  { label: 'Gewicht (Gr. L)',  low: '17,6 kg',   high: '17,6 kg'  },
+];
+
+/* ─── Compare-Daten ──────────────────────────────────────────────────────── */
 const compareRows = [
-  { feature: 'Erscheinung', portal: 'Täglich, einzelne Artikel', mag: '3–4× pro Jahr, kuratierte Ausgaben' },
-  { feature: 'Layout', portal: 'Blog-Format, einheitliches Template', mag: 'Individuell gestaltet, Editorial Design' },
-  { feature: 'Navigation', portal: 'Scrollen, Klicken', mag: 'Swipe, immersives Blättern' },
-  { feature: 'Multimedia', portal: 'Bilder, eingebettete Videos', mag: 'Fullbleed-Fotos, Animationen, interaktive Grafiken' },
-  { feature: 'SEO', portal: '★★★ Voll indexierbar', mag: '★★☆ Ausgaben indexierbar, Artikel verlinkbar' },
-  { feature: 'Offline', portal: '✗ Nein', mag: '✓ Ganze Ausgaben offline lesbar' },
-  { feature: 'Monetarisierung', portal: 'Display Ads (Banner, etc.)', mag: 'Native Ads, Sponsored Content, Interstitials' },
-  { feature: 'Zielgruppe', portal: 'Schnelle Info-Sucher, SEO-Traffic', mag: 'Treue Leser, tiefes Engagement' },
+  { feature: 'Erscheinung',     portal: 'Täglich, einzelne Artikel',        mag: '3–4× pro Jahr, kuratierte Ausgaben' },
+  { feature: 'Layout',          portal: 'Blog-Format, einheitliches Template', mag: 'Individuell gestaltet, Editorial Design' },
+  { feature: 'Navigation',      portal: 'Scrollen, Klicken',                 mag: 'Swipe, immersives Blättern' },
+  { feature: 'Multimedia',      portal: 'Bilder, eingebettete Videos',       mag: 'Fullbleed-Fotos, interaktive Grafiken' },
+  { feature: 'SEO',             portal: '★★★ Voll indexierbar',              mag: '★★☆ Ausgaben indexierbar' },
+  { feature: 'Offline',         portal: '✗ Nein',                            mag: '✓ Ganze Ausgaben offline lesbar' },
+  { feature: 'Monetarisierung', portal: 'Display Ads (Banner)',              mag: 'Native Ads, Sponsored Content' },
+  { feature: 'Zielgruppe',      portal: 'Schnelle Info-Sucher, SEO-Traffic', mag: 'Treue Leser, tiefes Engagement' },
 ];
 
-const mountainSVG = `<svg class="mountain-svg" viewBox="0 0 400 200"><path d="M0,200 L60,80 L120,140 L200,40 L280,120 L340,60 L400,200 Z" fill="white"/><path d="M0,200 L80,120 L160,170 L260,90 L340,150 L400,200 Z" fill="white" opacity="0.5"/></svg>`;
-
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════════════════════ */
 function render() {
-  if (currentView === 'kiosk') renderKiosk();
+  if      (currentView === 'kiosk')   renderKiosk();
   else if (currentView === 'compare') renderCompare();
-  else if (currentView === 'reader') renderReader();
+  else if (currentView === 'reader')  renderReader();
 }
 
+/* ─── KIOSK ─────────────────────────────────────────────────────────────── */
 function renderKiosk() {
   app.innerHTML = `
     <div class="kiosk">
@@ -258,28 +404,29 @@ function renderKiosk() {
         <button class="btn-compare" onclick="showCompare()">PWA vs. Portal?</button>
       </div>
       <div class="featured" onclick="openReader()">
-        ${mountainSVG}
+        <img class="featured-bg-img" src="${IMG.kiosk}" alt="">
+        <div class="featured-overlay"></div>
         <div style="position:relative;z-index:1">
           <div class="featured-tag">NEUESTE AUSGABE</div>
-          <div class="featured-issue">#041 · Frühjahr 2026</div>
+          <div class="featured-issue">#066 · Frühjahr 2026</div>
         </div>
         <div style="position:relative;z-index:1">
-          <div class="featured-title">Die besten<br>Trail-Bikes 2026</div>
-          <div class="featured-desc">12 Bikes im großen Vergleichstest</div>
-          <button class="btn-read" onclick="event.stopPropagation(); openReader()">JETZT LESEN</button>
+          <div class="featured-title">Das neue<br>Normal</div>
+          <div class="featured-desc">14 Enduro-Bikes · Leserumfrage · 32″-Laufräder</div>
+          <button class="btn-read" onclick="event.stopPropagation();openReader()">JETZT LESEN</button>
         </div>
       </div>
       <div class="archive-label">ARCHIV</div>
       <div class="archive-grid">
-        <div class="archive-card emtb" onclick="openReader()">
-          <div class="archive-num">#040</div>
-          <div class="archive-title">E-MTB Vergleichstest</div>
-          <div class="archive-season">Winter 2025</div>
-        </div>
-        <div class="archive-card gravity" onclick="openReader()">
-          <div class="archive-num">#039</div>
-          <div class="archive-title">Gravity Special</div>
+        <div class="archive-card trail" onclick="openReader()">
+          <div class="archive-num">#065</div>
+          <div class="archive-title">Trail Paradise</div>
           <div class="archive-season">Herbst 2025</div>
+        </div>
+        <div class="archive-card emtb" onclick="openReader()">
+          <div class="archive-num">#064</div>
+          <div class="archive-title">E-MTB Special</div>
+          <div class="archive-season">Sommer 2025</div>
         </div>
       </div>
       <div class="install-hint">
@@ -293,10 +440,10 @@ function renderKiosk() {
         <span class="offline-dot"></span>
         Offline verfügbar nach Download
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
+/* ─── COMPARE ────────────────────────────────────────────────────────────── */
 function renderCompare() {
   app.innerHTML = `
     <div class="compare">
@@ -304,14 +451,8 @@ function renderCompare() {
       <div class="compare-title">News Portal vs. PWA-Magazin</div>
       <div class="compare-sub">Beide leben im Web — mit komplett unterschiedlichem Zweck und Erlebnis.</div>
       <div class="compare-headers">
-        <div class="compare-header portal">
-          <div class="ch-label">News Portal</div>
-          <div class="ch-name">enduro-mtb.com</div>
-        </div>
-        <div class="compare-header mag">
-          <div class="ch-label blue">PWA Magazin</div>
-          <div class="ch-name">mag.enduro-mtb.com</div>
-        </div>
+        <div class="compare-header portal"><div class="ch-label">News Portal</div><div class="ch-name">enduro-mtb.com</div></div>
+        <div class="compare-header mag"><div class="ch-label blue">PWA Magazin</div><div class="ch-name">mag.enduro-mtb.com</div></div>
       </div>
       ${compareRows.map(r => `
         <div class="compare-row">
@@ -321,13 +462,12 @@ function renderCompare() {
             <div class="cr-divider"></div>
             <div class="cr-col mag">${r.mag}</div>
           </div>
-        </div>
-      `).join('')}
+        </div>`).join('')}
       <button class="btn-prototype" onclick="openReader()">MAGAZIN-PROTOTYP ANSEHEN</button>
-    </div>
-  `;
+    </div>`;
 }
 
+/* ─── READER ─────────────────────────────────────────────────────────────── */
 function renderReader() {
   const page = PAGES[currentPage];
   app.innerHTML = `
@@ -347,173 +487,358 @@ function renderReader() {
         <button class="btn-nav" onclick="nextPage()" ${currentPage === PAGES.length - 1 ? 'disabled' : ''}>→</button>
       </div>
     </div>
-  `;
+    <div id="geo-modal">
+      ${renderGeoModal()}
+    </div>`;
 
   const container = document.getElementById('pageContainer');
   container.addEventListener('touchstart', onTouchStart, { passive: true });
-  container.addEventListener('touchmove', onTouchMove, { passive: true });
-  container.addEventListener('touchend', onTouchEnd);
+  container.addEventListener('touchmove',  onTouchMove,  { passive: true });
+  container.addEventListener('touchend',   onTouchEnd);
 
-  if (page.type === 'biketest') {
-    setTimeout(animateScores, 300);
-  }
+  if (page.type === 'biketest-poacha') setTimeout(animateScores, 300);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEITEN-RENDERER
+═══════════════════════════════════════════════════════════════════════════ */
 function renderPage(type) {
+
+  /* ── 1. COVER ──────────────────────────────────────────────────────────── */
   if (type === 'cover') return `
-    <div class="page page-cover">
-      ${mountainSVG}
-      <div class="cover-header">
+    <div class="page page-cover-photo">
+      <img class="cover-bg" src="${IMG.coverBg}" alt="">
+      <div class="cover-overlay"></div>
+      <div class="cover-z cover-header-row">
         <div class="cover-logo">ENDURO</div>
-        <div class="cover-mag">Mountainbike Magazine</div>
+        <div class="cover-mag-label">Mountainbike Magazine</div>
       </div>
-      <div class="cover-body">
-        <div class="cover-title">Die besten\nTrail-Bikes\n2026</div>
-        <div class="cover-subtitle">12 Bikes im großen Vergleichstest</div>
+      <div class="cover-z">
+        <div class="cover-issue-tag">#066 · FRÜHJAHR 2026</div>
+        <div class="cover-title">Das neue<br>Normal</div>
+        <div class="cover-subtitle">14 Enduro-Bikes im Vergleichstest · Leserumfrage aus 127 Ländern · 32″-Laufräder</div>
       </div>
-      <div class="cover-footer">
-        <div class="cover-issue">#041 · Frühjahr 2026</div>
-        <div class="cover-swipe">WISCHEN ZUM LESEN →</div>
+      <div class="cover-z cover-footer-row">
+        <div class="cover-issue-info">enduro-mtb.com</div>
+        <div class="cover-swipe-hint">WISCHEN ZUM LESEN →</div>
       </div>
     </div>`;
 
-  if (type === 'toc') return `
-    <div class="page page-toc">
-      <div class="toc-issue">AUSGABE #041</div>
-      <div class="toc-title">Inhalt</div>
-      ${[
-        { num: '01', label: 'Editorial', page: '4' },
-        { num: '02', label: 'Trail-Bike Vergleichstest 2026', page: '8' },
-        { num: '03', label: 'Setup-Guide: Fahrwerk richtig einstellen', page: '34' },
-        { num: '04', label: 'Reise: Madeira Trail Paradise', page: '48' },
-        { num: '05', label: 'Tech Talk: Mullet vs. 29er', page: '62' },
-        { num: '06', label: 'Interview: Ines Thoma', page: '74' },
-      ].map(i => `
-        <div class="toc-item">
-          <span class="toc-num">${i.num}</span>
-          <span class="toc-label">${i.label}</span>
-          <span class="toc-page">${i.page}</span>
-        </div>
-      `).join('')}
-    </div>`;
+  /* ── 2. TOC ────────────────────────────────────────────────────────────── */
+  if (type === 'toc') {
+    const items = [
+      { num:'01', label:'Editorial',           sub:'Das neue Normal',                      page:'4'  },
+      { num:'02', label:'Leserumfrage 2025',   sub:'14.495 Leser aus 127 Ländern',         page:'8'  },
+      { num:'03', label:'Best Enduro Bike',    sub:'14 Bikes im großen Vergleichstest',    page:'18' },
+      { num:'04', label:'Ghost Poacha FP',     sub:'Freeride-Bike mit Enduro-Ambitionen',  page:'42' },
+      { num:'05', label:'32″-Laufräder',       sub:'Nächster Trend oder Kuriosum?',        page:'58' },
+      { num:'06', label:'DHaRCO Knee Pads',   sub:'Level 2, Trail-Komfort',               page:'66' },
+      { num:'07', label:'GET A GRIP Bar Ends', sub:'Weniger Armpump auf langen Abfahrten', page:'72' },
+    ];
+    return `
+      <div class="page page-toc">
+        <div class="toc-issue">AUSGABE #066 · THE NEW NORMAL</div>
+        <div class="toc-title">Inhalt</div>
+        ${items.map(i => `
+          <div class="toc-item">
+            <span class="toc-num">${i.num}</span>
+            <div style="flex:1">
+              <div class="toc-label">${i.label}</div>
+              <div class="toc-sublabel">${i.sub}</div>
+            </div>
+            <span class="toc-page">${i.page}</span>
+          </div>`).join('')}
+      </div>`;
+  }
 
-  if (type === 'hero') return `
-    <div class="page page-hero">
-      <div class="hero-cat">VERGLEICHSTEST</div>
-      <div class="hero-body">
-        <div class="hero-title">12 Trail-Bikes\nim Duell</div>
-        <div class="hero-intro">Wir haben die spannendsten Trail-Bikes der Saison über Monate auf unseren Hometrails und in den Alpen getestet. Das Ergebnis: So gut war die Auswahl noch nie.</div>
-        <div class="hero-author">
-          <div class="author-avatar">RS</div>
+  /* ── 3. EDITORIAL HERO + TEXT ──────────────────────────────────────────── */
+  if (type === 'editorial-hero') return `
+    <div class="page page-editorial">
+      <img class="editorial-hero-img" src="${IMG.portrait}" alt="Peter, Chefredakteur">
+      <div class="editorial-hero-fade"></div>
+      <div class="editorial-body">
+        <div class="editorial-cat">Editorial · Ausgabe #066</div>
+        <div class="editorial-headline">Das neue Normal</div>
+        <div class="editorial-subhead">Warum Wandel kein Trend ist</div>
+        <div class="editorial-byline">
+          <img class="editorial-portrait" src="${IMG.portrait}" alt="Peter">
           <div>
-            <div class="author-name">Robin Schmitt</div>
-            <div class="author-time">25 Min Lesezeit</div>
+            <div class="editorial-author-name">Peter</div>
+            <div class="editorial-author-role">Chefredakteur, ENDURO Magazin</div>
           </div>
+        </div>
+        <div class="editorial-lead">Manchmal merkt man gar nicht, dass man mitten in einem Wandel steckt — bis man zurückblickt und sich wundert, wie selbstverständlich vieles geworden ist.</div>
+        <p class="editorial-text">Technik, Trends, Lebensmodelle, sogar unser Verhältnis zum Bike … alles ist ständig in Bewegung. Und genau das ist das neue Normal, denn die Szene bleibt nie stehen, sondern denkt, entwickelt und öffnet sich mit jeder Saison ein Stück weiter.</p>
+        <div class="editorial-pull-quote">„The New Normal bedeutet: Alles hat Platz. Alles darf sein. Und alles beeinflusst, wie wir Mountainbiken leben."</div>
+        <p class="editorial-text">Nirgendwo zeigt sich das deutlicher als in unserer Leserumfrage. 14.495 von euch, verteilt über 127 Länder, haben uns einen ehrlichen, ungeschminkten Blick in die Gegenwart und Zukunft des Mountainbikens geschenkt. Eure Antworten sind nicht nur Zahlen — sie sind ein Spiegel unserer Community: neugierig, kritisch, emotional, technikverliebt, vielfältig.</p>
+        <div class="editorial-divider"></div>
+        <p class="editorial-text">Und weil das Enduro-Bike nach wie vor euer Herz höher schlagen lässt, starten wir genau dort: In unserem großen Vergleichstest zeigen die spannendsten Enduro-Bikes der Saison, wie sich Anspruch und Realität im Jahr 2026 treffen. Wie viel Innovation steckt in den 14 Bikes? Wie viel riskieren die Hersteller noch?</p>
+        <p class="editorial-text">Doch bevor wir tiefer einsteigen, lohnt sich ein kurzer Blick zur Seite — auf die Trends, die ein neues Normal anstreben und der Bike-Welt womöglich eine weitere Laufradgröße bescheren: 32-Zoll-Laufräder. Klingt verrückt. Ist es vielleicht auch. Aber es ist vor allem eines: Ein Experiment, das die einfache Frage stellt, ob das heutige „normal" noch gut genug ist — oder ob wir mutig genug sind, neue Maßstäbe zu denken, bevor wir sie fahren.</p>
+        <p class="editorial-text">Zwischen Revolution und Schweinezyklus jongliert die Branche mit Ideen, die für manche zu groß, zu schwer, zu absurd wirken. Doch Innovation beginnt selten dort, wo alle nicken — sondern dort, wo jemand sagt: „Warum eigentlich nicht?". Ob 32" das nächste große Ding wird oder ein Kapitel fürs Kuriositätenkabinett? Noch offen. Aber allein die Tatsache, dass wir darüber sprechen, zeigt, wie sehr unser Sport sich weiterentwickelt.</p>
+        <div class="editorial-signature">Also viel Spaß mit der Ausgabe.<br><br>Cheers, Peter</div>
+      </div>
+    </div>`;
+
+  /* ── 4. LESERUMFRAGE ───────────────────────────────────────────────────── */
+  if (type === 'editorial-text') return `
+    <div class="page page-survey">
+      <div class="survey-headline">Die Community spricht</div>
+      <div class="survey-sub">Leserumfrage 2025 — ehrlich, ungeschminkt, aus 127 Ländern.</div>
+      <div class="survey-img-card">
+        <img class="survey-img" src="${IMG.survey}" alt="14.495 Teilnehmer aus 127 Ländern">
+      </div>
+      <div class="survey-stats-grid">
+        <div class="survey-stat">
+          <div class="survey-stat-val">14.495</div>
+          <div class="survey-stat-label">Teilnehmer</div>
+        </div>
+        <div class="survey-stat">
+          <div class="survey-stat-val">127</div>
+          <div class="survey-stat-label">Länder</div>
+        </div>
+      </div>
+      <p class="survey-body-text">Eure Antworten sind nicht nur Zahlen — sie sind ein Spiegel unserer Community: neugierig, kritisch, emotional, technikverliebt, vielfältig. Ihr definiert, was Biken für euch bedeutet.</p>
+      <div class="survey-pull-quote">„Vom Gravity-Fan bis zum Touren-Liebhaber — genau diese Vielfalt ist es, die unsere Szene heute ausmacht."</div>
+      <p class="survey-body-text">Ihr zeigt, welche Bikes euch begeistern, welche Probleme euch beschäftigen und welche Wünsche ihr an die Zukunft habt. Und damit gestaltet ihr ganz nebenbei die gesamte Industrie mit.</p>
+      <div class="survey-mini-stats">
+        <div class="survey-mini-stat">
+          <div class="survey-mini-val">62%</div>
+          <div class="survey-mini-label">fahren Enduro-Bike</div>
+        </div>
+        <div class="survey-mini-stat">
+          <div class="survey-mini-val">38%</div>
+          <div class="survey-mini-label">fahren E-MTB</div>
+        </div>
+        <div class="survey-mini-stat">
+          <div class="survey-mini-val">4,2×</div>
+          <div class="survey-mini-label">pro Woche on Trail</div>
+        </div>
+      </div>
+      <p class="survey-body-text">Wenn wir durch eure Antworten blättern, sehen wir, dass es kein homogenes Bild gibt, sondern einen wilden Mix an Bike-Fanatikern. The New Normal bedeutet: Alles hat Platz. Alles darf sein.</p>
+    </div>`;
+
+  /* ── 5. FULLBLEED YETI ─────────────────────────────────────────────────── */
+  if (type === 'fullbleed-yeti') return `
+    <div class="page page-fullbleed-real">
+      <img class="fullbleed-img-real" src="${IMG.yeti}" alt="">
+      <div class="fullbleed-grad-real"></div>
+      <div class="fullbleed-text-real">
+        <div class="fullbleed-caption-real">Yeti LTE im Vergleichstest 2026 — 145 mm, bergauf präzise, bergab vollgasfähig.</div>
+        <div class="fullbleed-credit-real">Foto: ENDURO Magazin</div>
+      </div>
+    </div>`;
+
+  /* ── 6. VT HERO (GHOST POACHA INTRO) ──────────────────────────────────── */
+  if (type === 'vt-hero') return `
+    <div class="page page-vt-hero">
+      <img class="vt-hero-bg" src="${IMG.poachaHero}" alt="">
+      <div class="vt-hero-overlay"></div>
+      <div class="vt-hero-content">
+        <div class="vt-hero-tag">Vergleichstest 2026</div>
+        <div class="vt-hero-brand">Ghost</div>
+        <div class="vt-hero-model">Poacha Full Party</div>
+        <div class="vt-hero-lead">Freeride-Bike mit Enduro-Ambitionen: 180 mm Federweg, Mullet-Setup, robuste Parts — und bergauf überraschend effizient. Warum es auch im Enduro-Vergleich zu den Favoriten zählt.</div>
+        <div class="vt-hero-pills">
+          <span class="vt-hero-pill">180 / 180 mm</span>
+          <span class="vt-hero-pill">Mullet</span>
+          <span class="vt-hero-pill">8.000 €</span>
+          <span class="vt-hero-pill">17,6 kg</span>
         </div>
       </div>
     </div>`;
 
-  if (type === 'content') return `
-    <div class="page page-content">
-      <div class="content-headline">Die Testkriterien</div>
-      <div class="stats-grid">
-        ${[{v:'12',l:'Bikes'},{v:'4.800',l:'Test-km'},{v:'6',l:'Tester'},{v:'142',l:'Trail-Tage'}].map(s => `
-          <div class="stat-card">
-            <div class="stat-value">${s.v}</div>
-            <div class="stat-label">${s.l}</div>
+  /* ── 7. BIKETEST GHOST POACHA ──────────────────────────────────────────── */
+  if (type === 'biketest-poacha') {
+    const scores = [
+      { l:'Bergauf',        v:76, cls:'mid'  },
+      { l:'Bergab',         v:91, cls:'high' },
+      { l:'Handling',       v:87, cls:'high' },
+      { l:'Laufruhe',       v:89, cls:'high' },
+      { l:'Preis-Leistung', v:74, cls:'mid'  },
+    ];
+    return `
+      <div class="page page-biketest">
+        <div class="bt-tag">BIKE-TEST</div>
+        <div class="bt-brand">Ghost</div>
+        <div class="bt-model">Poacha Full Party</div>
+        <div class="bt-specs"><span>8.000 €</span><span>·</span><span>180 / 180 mm</span><span>·</span><span>17,6 kg</span><span>·</span><span>Mullet</span></div>
+        <div class="bt-photo-wrap" onclick="toggleGeo()">
+          <img class="bt-hero-photo" src="${IMG.poachaCard}" alt="Ghost Poacha Full Party">
+          <div class="bt-photo-hint">📐 GEOMETRIE</div>
+        </div>
+        <div class="bt-rating">
+          <div class="bt-score">88</div>
+          <div>
+            <div class="bt-winner">TESTFAVORIT</div>
+            <div class="bt-verdict">Agil und laufruhig zugleich — Party bergab, ohne bergauf auszusteigen.</div>
           </div>
-        `).join('')}
-      </div>
-      <p class="content-text">Unser Trail-Bike-Test folgt einem strengen Protokoll. Jedes Bike durchläuft mindestens 400 Kilometer auf verschiedenen Terrains — von flowigen Hometrails bis zu technisch anspruchsvollen Alpen-Abfahrten.</p>
-      <p class="content-text">Dabei bewerten wir in sechs Kategorien: Uphill-Performance, Downhill-Fähigkeit, Handling, Komfort, Ausstattung und Preis-Leistung. Jede Kategorie wird von mindestens drei Testern unabhängig bewertet.</p>
-      <div class="pull-quote">„So gut war die Auswahl an Trail-Bikes noch nie — die Entscheidung fällt schwerer denn je."</div>
-    </div>`;
+        </div>
+        ${scores.map(s => `
+          <div class="score-row">
+            <div class="score-header">
+              <span class="score-label">${s.l}</span>
+              <span class="score-value">${s.v}%</span>
+            </div>
+            <div class="score-track"><div class="score-fill ${s.cls}" data-width="${s.v}"></div></div>
+          </div>`).join('')}
+        <div class="tops-flops">
+          <div class="tops-box">
+            <div class="tf-label top">Tops</div>
+            <div class="tf-item">Starker Allrounder</div>
+            <div class="tf-item">Durchdachter Spec</div>
+            <div class="tf-item">Agilität + Laufruhe</div>
+            <div class="tf-item">RockShox Ultimate</div>
+          </div>
+          <div class="flops-box">
+            <div class="tf-label flop">Flops</div>
+            <div class="tf-item">Hohes Gewicht</div>
+            <div class="tf-item">Originale Griffe</div>
+            <div class="tf-item">Kein Staufach</div>
+          </div>
+        </div>
+        <div class="bt-section-title">Tester-Stimmen</div>
+        <div class="bt-quote">„Die FULL-PARTY-Ausstattung lässt fast keine Wünsche offen und ihr könnt einfach draufsitzen und losballern."</div>
+        <div class="bt-quote">„Schwer auf dem Papier, auf dem Trail aber superagil — zudem kommt ihr sicher durch Wurzelfelder und der Ride ist verdammt spaßig."</div>
+        <div class="bt-section-title">Fazit</div>
+        <p class="bt-body-text">Vom Park-Sieger zum Enduro-Liebling: Das POACHA FULL PARTY zählt auch in diesem Vergleichstest zu den stärksten Bikes. Es mixt Agilität und Laufruhe zu einem extrem spaßigen, easy zu fahrenden Paket, das auch vor Highspeed-Sektionen nicht zurückschreckt.</p>
+        <p class="bt-body-text">Trotz viel Federweg und hohem Gewicht pedaliert es gut und deckt einen breiten Einsatzbereich ab. Der Spec ist durchdacht, hochwertig — ihr könnt damit direkt auf die Trails starten, abgesehen von den Griffen.</p>
+      </div>`;
+  }
 
-  if (type === 'biketest') return `
-    <div class="page page-biketest">
-      <div class="bt-tag">BIKE-TEST</div>
-      <div class="bt-brand">Specialized</div>
-      <div class="bt-model">Stumpjumper EVO</div>
-      <div class="bt-specs"><span>5.499 €</span><span>·</span><span>150/140 mm</span><span>·</span><span>13,4 kg</span></div>
-      <div class="bt-rating">
-        <div class="bt-score">9.2</div>
-        <div>
-          <div class="bt-winner">TESTSIEGER</div>
-          <div class="bt-verdict">Der Alleskönner, der bergauf überrascht und bergab begeistert.</div>
-        </div>
-      </div>
-      ${[{l:'Uphill',v:88},{l:'Downhill',v:94},{l:'Handling',v:92},{l:'Komfort',v:85},{l:'Preis-Leistung',v:78}].map(s => `
-        <div class="score-row">
-          <div class="score-header">
-            <span class="score-label">${s.l}</span>
-            <span class="score-value">${s.v}%</span>
-          </div>
-          <div class="score-track">
-            <div class="score-fill ${s.v >= 90 ? 'high' : 'mid'}" data-width="${s.v}"></div>
-          </div>
-        </div>
-      `).join('')}
-      <div class="bt-video">
-        <div class="bt-video-icon">▶</div>
-        <div>
-          <div class="bt-video-title">Video: Stumpjumper EVO auf dem Trail</div>
-          <div class="bt-video-meta">2:34 · Eingebettetes Video</div>
-        </div>
-      </div>
-    </div>`;
-
-  if (type === 'fullbleed') return `
-    <div class="page page-fullbleed">
-      <div class="fullbleed-bg"></div>
-      <svg class="fullbleed-svg" viewBox="0 0 400 500">
-        <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6b35"/><stop offset="40%" stop-color="#c2185b"/><stop offset="100%" stop-color="#1a2634"/></linearGradient></defs>
-        <rect width="400" height="500" fill="url(#sky)"/>
-        <path d="M0,350 L80,200 L140,280 L220,150 L300,250 L360,180 L400,350 Z" fill="#0a1628"/>
-        <path d="M0,400 L100,300 L180,350 L280,260 L370,330 L400,400 Z" fill="#0d1117"/>
-        <circle cx="320" cy="100" r="30" fill="#ff6b35" opacity="0.8"/>
-      </svg>
-      <div class="fullbleed-text">
-        <div class="fullbleed-caption">Sonnenaufgang am Reschenpass — 6:14 Uhr, perfekte Bedingungen für unseren Fototermin mit dem Testfeld.</div>
-        <div class="fullbleed-credit">Foto: Markus Greber</div>
+  /* ── 8. FULLBLEED POACHA ───────────────────────────────────────────────── */
+  if (type === 'fullbleed-poacha') return `
+    <div class="page page-fullbleed-real">
+      <img class="fullbleed-img-real" src="${IMG.poachaFull}" alt="">
+      <div class="fullbleed-grad-real"></div>
+      <div class="fullbleed-text-real">
+        <div class="fullbleed-caption-real">Ghost Poacha Full Party — vom Park-Sieger zum Enduro-Liebling. Eines der stärksten Bikes im Vergleichstest 2026.</div>
+        <div class="fullbleed-credit-real">Foto: ENDURO Magazin</div>
       </div>
     </div>`;
 
   return '<div class="page" style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.3">Seite nicht verfügbar</div>';
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   GEOMETRIE OVERLAY
+═══════════════════════════════════════════════════════════════════════════ */
+function renderGeoModal() {
+  return `
+    <div class="geo-header">
+      <div class="geo-title">Geometrie</div>
+      <button class="geo-close-btn" onclick="toggleGeo()">×</button>
+    </div>
+    <div class="geo-bike-label">Ghost Poacha Full Party · Größe L</div>
+    <div class="geo-chip-toggle">
+      <button class="geo-chip-btn active" id="chip-low"  onclick="setGeoChip('low')">↓ LOW</button>
+      <button class="geo-chip-btn"        id="chip-high" onclick="setGeoChip('high')">↑ HIGH</button>
+    </div>
+    <div class="geo-table">
+      ${GEO.map(r => `
+        <div class="geo-row">
+          <span class="geo-key">${r.label}</span>
+          <span class="geo-val geo-low">${r.low}</span>
+          <span class="geo-val geo-high" style="display:none">${r.high}</span>
+        </div>`).join('')}
+    </div>
+    <div class="geo-note">
+      Flip-Chip in Sitzstrebe: LOW = slacker, tieferes Tretlager, mehr Reserven bergab. HIGH = ausgewogenere Balance, etwas direktere Front.<br><br>
+      Erhältlich in S / M / L / XL · Mehr Infos: ghost-bikes.com
+    </div>`;
+}
+
+function toggleGeo() {
+  const modal = document.getElementById('geo-modal');
+  if (!modal) return;
+  modal.classList.toggle('active');
+}
+
+function setGeoChip(chip) {
+  const lowBtn  = document.getElementById('chip-low');
+  const highBtn = document.getElementById('chip-high');
+  document.querySelectorAll('.geo-low').forEach(el  => el.style.display = chip === 'low'  ? '' : 'none');
+  document.querySelectorAll('.geo-high').forEach(el => el.style.display = chip === 'high' ? '' : 'none');
+  if (lowBtn)  { lowBtn.classList.toggle('active',  chip === 'low');  }
+  if (highBtn) { highBtn.classList.toggle('active', chip === 'high'); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONEN & NAVIGATION
+═══════════════════════════════════════════════════════════════════════════ */
 function animateScores() {
   document.querySelectorAll('.score-fill').forEach((el, i) => {
-    setTimeout(() => { el.style.width = el.dataset.width + '%'; }, i * 100);
+    setTimeout(() => { el.style.width = el.dataset.width + '%'; }, i * 130);
   });
 }
 
-function showKiosk() { currentView = 'kiosk'; render(); }
-function showCompare() { currentView = 'compare'; render(); }
-function openReader() { currentView = 'reader'; currentPage = 0; render(); }
-function nextPage() { if (currentPage < PAGES.length - 1) { currentPage++; render(); } }
-function prevPage() { if (currentPage > 0) { currentPage--; render(); } }
+function showKiosk()  { currentView = 'kiosk';   render(); }
+function showCompare(){ currentView = 'compare';  render(); }
+function openReader() { currentView = 'reader';   currentPage = 0; render(); }
 
-let swipeX = 0;
-function onTouchStart(e) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; swiping = true; }
+function nextPage() {
+  if (document.getElementById('geo-modal')?.classList.contains('active')) { toggleGeo(); return; }
+  if (currentPage < PAGES.length - 1) { currentPage++; render(); }
+}
+function prevPage() {
+  if (document.getElementById('geo-modal')?.classList.contains('active')) { toggleGeo(); return; }
+  if (currentPage > 0) { currentPage--; render(); }
+}
+
+/* ─── Touch: Direction Locking ───────────────────────────────────────────── */
+function onTouchStart(e) {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  swipeX      = 0;
+  swipeDir    = null;
+}
+
 function onTouchMove(e) {
-  if (!swiping) return;
   const dx = e.touches[0].clientX - touchStartX;
   const dy = e.touches[0].clientY - touchStartY;
-  if (Math.abs(dx) > Math.abs(dy)) {
+
+  /* Richtung nach ersten 10px sperren */
+  if (!swipeDir && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+    swipeDir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+  }
+
+  if (swipeDir === 'h') {
     swipeX = dx;
     const container = document.getElementById('pageContainer');
-    if (container) container.style.transform = `translateX(${dx * 0.3}px)`;
+    if (container) {
+      container.classList.add('swiping');
+      container.style.transform = `translateX(${dx * 0.28}px)`;
+    }
   }
+  /* swipeDir === 'v': Browser scrollt den Seiteninhalt — nichts tun */
 }
+
 function onTouchEnd() {
-  if (swipeX < -60) nextPage();
-  else if (swipeX > 60) prevPage();
-  else {
-    const container = document.getElementById('pageContainer');
-    if (container) container.style.transform = '';
+  const container = document.getElementById('pageContainer');
+  if (container) {
+    container.classList.remove('swiping');
+    container.classList.add('snap-back');
+    container.style.transform = '';
+    setTimeout(() => container?.classList.remove('snap-back'), 300);
   }
-  swipeX = 0; swiping = false;
+
+  if      (swipeX < -60) nextPage();
+  else if (swipeX >  60) prevPage();
+
+  swipeX   = 0;
+  swipeDir = null;
 }
+
+/* ─── Keyboard Navigation ─────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (currentView !== 'reader') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  nextPage();
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    prevPage();
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('geo-modal');
+    if (modal?.classList.contains('active')) toggleGeo();
+    else showKiosk();
+  }
+});
 
 render();
 </script>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENDURO PWA — Architektur & Tech Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  background: #0a0a0a; color: #fff;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+/* ─── LAYOUT ─────────────────────────────────────────────────────────────── */
+.container { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+
+/* ─── HEADER ─────────────────────────────────────────────────────────────── */
+header {
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 32px 0 28px;
+  margin-bottom: 64px;
+}
+.header-inner { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.logo { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+.logo span { color: #0099CC; }
+.header-meta { font-size: 11px; opacity: 0.3; letter-spacing: 0.15em; text-transform: uppercase; text-align: right; line-height: 1.8; }
+
+/* ─── SECTION ────────────────────────────────────────────────────────────── */
+section { margin-bottom: 72px; }
+.section-tag { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 10px; }
+.section-title { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 8px; }
+.section-sub { font-size: 14px; opacity: 0.45; margin-bottom: 32px; max-width: 600px; line-height: 1.6; }
+
+/* ─── PROBLEM / LÖSUNG ───────────────────────────────────────────────────── */
+.problem-box {
+  background: rgba(231,76,60,0.07); border: 1px solid rgba(231,76,60,0.2);
+  border-radius: 12px; padding: 22px 24px; margin-bottom: 14px;
+}
+.solution-box {
+  background: rgba(0,153,204,0.07); border: 1px solid rgba(0,153,204,0.2);
+  border-radius: 12px; padding: 22px 24px;
+}
+.box-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+.box-label.red { color: #e74c3c; }
+.box-label.blue { color: #0099CC; }
+.box-text { font-size: 14px; line-height: 1.7; opacity: 0.8; }
+
+/* ─── STACK GRID ─────────────────────────────────────────────────────────── */
+.stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.stack-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 20px 22px;
+  transition: border-color 0.2s;
+}
+.stack-card:hover { border-color: rgba(0,153,204,0.4); }
+.stack-role { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.35; margin-bottom: 6px; }
+.stack-name { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+.stack-why { font-size: 12px; opacity: 0.45; line-height: 1.5; }
+.stack-badge {
+  display: inline-block; margin-top: 10px; font-size: 9px; padding: 3px 8px;
+  border-radius: 4px; font-weight: 700; letter-spacing: 0.1em;
+}
+.stack-badge.open  { background: rgba(0,153,204,0.15); color: #0099CC; }
+.stack-badge.fixed { background: rgba(46,204,113,0.15); color: #2ecc71; }
+
+/* ─── WORKFLOW ───────────────────────────────────────────────────────────── */
+.workflow { display: flex; flex-direction: column; gap: 0; }
+.workflow-step {
+  display: flex; gap: 20px; padding: 20px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.workflow-step:last-child { border-bottom: none; }
+.step-num {
+  font-size: 11px; font-weight: 700; color: #0099CC;
+  min-width: 28px; padding-top: 2px; font-variant-numeric: tabular-nums;
+}
+.step-body { flex: 1; }
+.step-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.step-desc { font-size: 13px; opacity: 0.5; line-height: 1.6; }
+.step-tool {
+  display: inline-block; margin-top: 8px; font-size: 10px; padding: 3px 9px;
+  border-radius: 4px; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.09); opacity: 0.7;
+}
+
+/* ─── KOMPONENTEN ────────────────────────────────────────────────────────── */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.comp-card {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; padding: 14px 16px;
+}
+.comp-card.mvp { border-left: 2px solid #0099CC; }
+.comp-card.p2  { border-left: 2px solid rgba(255,255,255,0.15); }
+.comp-name { font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; margin-bottom: 4px; color: #0099CC; }
+.comp-card.p2 .comp-name { color: rgba(255,255,255,0.5); }
+.comp-desc { font-size: 11px; opacity: 0.4; line-height: 1.4; }
+.comp-phase { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 6px; opacity: 0.3; }
+
+/* ─── VERGLEICH TABELLE ──────────────────────────────────────────────────── */
+.compare-table { width: 100%; border-collapse: collapse; }
+.compare-table th {
+  text-align: left; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  opacity: 0.35; padding: 0 12px 12px 0; font-weight: 600;
+}
+.compare-table th.blue { color: #0099CC; opacity: 1; }
+.compare-table td {
+  padding: 12px 12px 12px 0; font-size: 13px; vertical-align: top;
+  border-top: 1px solid rgba(255,255,255,0.05); line-height: 1.5;
+}
+.compare-table td:first-child { opacity: 0.4; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; white-space: nowrap; padding-top: 14px; }
+.compare-table td:nth-child(2) { opacity: 0.45; }
+.compare-table td:nth-child(3) { color: rgba(255,255,255,0.85); }
+
+/* ─── TEAM ───────────────────────────────────────────────────────────────── */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.team-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 22px 22px;
+}
+.team-role { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #0099CC; font-weight: 700; margin-bottom: 8px; }
+.team-name { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.team-items { list-style: none; }
+.team-items li { font-size: 12px; opacity: 0.5; padding: 3px 0; display: flex; gap: 8px; }
+.team-items li::before { content: '—'; opacity: 0.3; flex-shrink: 0; }
+
+/* ─── FOOTER ─────────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 32px 0 48px; margin-top: 80px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-logo { font-size: 14px; font-weight: 900; opacity: 0.3; }
+.footer-meta { font-size: 11px; opacity: 0.2; }
+
+/* ─── DIVIDER ────────────────────────────────────────────────────────────── */
+.divider { height: 1px; background: rgba(255,255,255,0.06); margin: 72px 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="logo">ENDURO<span>.</span>PWA</div>
+      </div>
+      <div class="header-meta">
+        Architektur & Tech Stack<br>
+        Stand: April 2026 · Version 0.1 Prototyp
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── AUSGANGSLAGE ──────────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Ausgangslage</div>
+    <div class="section-title">Warum eine PWA?</div>
+    <div class="section-sub">Die bisherige Magazin-App ist tot. Die PWA ersetzt sie — ohne App Store, ohne doppeltes Layout, ohne externe Abhängigkeiten.</div>
+
+    <div class="problem-box">
+      <div class="box-label red">Problem</div>
+      <div class="box-text">Button Publish (InDesign-Plugin) — der einzige Weg zur bisherigen nativen App — ist ausgefallen. SSL-Zertifikat abgelaufen, kein Support, kein Fallback. Doppeltes Layout (iPad + Smartphone), App Store Abhängigkeit, kein Offline, kein Web.</div>
+    </div>
+    <div class="solution-box">
+      <div class="box-label blue">Lösung</div>
+      <div class="box-text">Progressive Web App auf einer Subdomain (mag.enduro-mtb.com). Responsive statt doppeltes Layout, installierbar ohne App Store, offline-fähig, werbefinanziert via Standard Web-Ads. Erscheint 3–4× pro Jahr als kuratierte Ausgabe — ergänzt das tägliche News-Portal auf enduro-mtb.com.</div>
+    </div>
+  </section>
+
+  <!-- ─── TECH STACK ────────────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Tech Stack</div>
+    <div class="section-title">Eingesetzte Technologien</div>
+    <div class="section-sub">Bewusst auf bestehende, stabile Ökosysteme gesetzt — kein proprietäres Tooling, kein Vendor Lock-in.</div>
+
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="stack-role">Frontend Framework</div>
+        <div class="stack-name">Next.js</div>
+        <div class="stack-why">React-basiert, PWA-ready, große Community, exzellente Sanity-Integration</div>
+        <span class="stack-badge open">Entscheidung offen</span>
+      </div>
+      <div class="stack-card">
+        <div class="stack-role">CMS / Content</div>
+        <div class="stack-name">Sanity</div>
+        <div class="stack-why">Free Tier, visueller Editor, flexible Schemas, Live-Vorschau im Browser</div>
+        <span class="stack-badge fixed">Empfohlen</span>
+      </div>
+      <div class="stack-card">
+        <div class="stack-role">Hosting / Deploy</div>
+        <div class="stack-name">Vercel</div>
+        <div class="stack-why">Automatischer Build bei Sanity-Publish, globales CDN, HTTPS, Previews</div>
+        <span class="stack-badge open">Entscheidung offen</span>
+      </div>
+      <div class="stack-card">
+        <div class="stack-role">Design Tool</div>
+        <div class="stack-name">Figma</div>
+        <div class="stack-why">Web-nativ, komponenten-basiert, kollaborativ — ersetzt InDesign für die digitale Komponentengestaltung</div>
+        <span class="stack-badge fixed">Empfohlen</span>
+      </div>
+      <div class="stack-card">
+        <div class="stack-role">Offline / PWA</div>
+        <div class="stack-name">Service Worker</div>
+        <div class="stack-why">Cached heruntergeladene Ausgaben für Offline-Lesbarkeit</div>
+        <span class="stack-badge fixed">Geplant</span>
+      </div>
+      <div class="stack-card">
+        <div class="stack-role">Werbung</div>
+        <div class="stack-name">Google Ad Manager</div>
+        <div class="stack-why">Standard Web-Ads, Display + Native + Interstitials zwischen Seiten</div>
+        <span class="stack-badge fixed">Geplant</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── WORKFLOW ──────────────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Workflow</div>
+    <div class="section-title">Vom Inhalt zur fertigen Ausgabe</div>
+    <div class="section-sub">Komponenten werden einmal gebaut. Danach ist jede Ausgabe nur noch Content — kein Layout, kein App Store Review, kein Warten.</div>
+
+    <div class="workflow">
+      <div class="workflow-step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Komponenten-Design (einmalig)</div>
+          <div class="step-desc">Art Director gestaltet die Komponenten-Templates: Cover, Article-Hero, Bike-Test, Fullbleed-Photo etc. Jede Komponente wird einmal designed — und gilt für alle zukünftigen Ausgaben.</div>
+          <span class="step-tool">Figma</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Komponenten-Implementierung (einmalig)</div>
+          <div class="step-desc">Developer baut die Komponenten als wiederverwendbaren Code. Parallel werden die Sanity-Schemas definiert: welche Felder hat ein Bike-Test? (Marke, Preis, Federweg, Score-Werte…)</div>
+          <span class="step-tool">Next.js</span>
+          <span class="step-tool">Sanity</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Content-Erstellung (pro Ausgabe)</div>
+          <div class="step-desc">Redaktion tippt Texte, lädt Bilder hoch, füllt Scores und Specs aus. Art Director wählt und ordnet Komponenten — welche Seiten kommen in welcher Reihenfolge?</div>
+          <span class="step-tool">Sanity CMS</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <div class="step-title">Live-Vorschau & Review</div>
+          <div class="step-desc">Sanity zeigt die echte PWA neben dem Editor in Echtzeit. Korrekturen direkt im CMS, kein Datei-Austausch, kein PDF-Feedback.</div>
+          <span class="step-tool">Sanity Presentation</span>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">05</div>
+        <div class="step-body">
+          <div class="step-title">Veröffentlichung</div>
+          <div class="step-desc">"Publish" in Sanity triggert automatischen Build. Keine App Store Reviews, keine Wartezeiten. Die neue Ausgabe ist in Minuten live.</div>
+          <span class="step-tool">Vercel</span>
+          <span class="step-tool">mag.enduro-mtb.com</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── KOMPONENTEN ───────────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Komponentenkatalog</div>
+    <div class="section-title">Seiten-Bausteine</div>
+    <div class="section-sub">Jede Ausgabe wird aus diesen wiederverwendbaren Komponenten zusammengesetzt. MVP-Komponenten sind für die erste Ausgabe verpflichtend.</div>
+
+    <div class="comp-grid">
+      <div class="comp-card mvp">
+        <div class="comp-name">cover</div>
+        <div class="comp-desc">Titelseite mit Fullbleed-Foto, Ausgabennummer, Titel</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card mvp">
+        <div class="comp-name">table-of-contents</div>
+        <div class="comp-desc">Interaktives Inhaltsverzeichnis mit Kapitelstruktur</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card mvp">
+        <div class="comp-name">article-hero</div>
+        <div class="comp-desc">Artikel-Einstieg mit Kategorie, Titel, Intro, Autor</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card mvp">
+        <div class="comp-name">article-text</div>
+        <div class="comp-desc">Fließtext mit Pull-Quotes und Zwischenüberschriften</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card mvp">
+        <div class="comp-name">bike-test</div>
+        <div class="comp-desc">Produkttest mit Specs, Score-Bars, Tops/Flops, Geometrie-Overlay, Video</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card mvp">
+        <div class="comp-name">fullbleed-photo</div>
+        <div class="comp-desc">Vollbild-Foto mit Caption und Credit</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card mvp">
+        <div class="comp-name">ad-slot</div>
+        <div class="comp-desc">Werbeplatz — Display Ad, Interstitial zwischen Seiten</div>
+        <div class="comp-phase">MVP</div>
+      </div>
+      <div class="comp-card p2">
+        <div class="comp-name">comparison-chart</div>
+        <div class="comp-desc">Vergleichstabelle mehrerer Produkte</div>
+        <div class="comp-phase">Phase 2</div>
+      </div>
+      <div class="comp-card p2">
+        <div class="comp-name">image-gallery</div>
+        <div class="comp-desc">Swipeable Bildergalerie</div>
+        <div class="comp-phase">Phase 2</div>
+      </div>
+      <div class="comp-card p2">
+        <div class="comp-name">video-embed</div>
+        <div class="comp-desc">YouTube / Vimeo eingebettet</div>
+        <div class="comp-phase">Phase 2</div>
+      </div>
+      <div class="comp-card p2">
+        <div class="comp-name">sponsored-showcase</div>
+        <div class="comp-desc">Individuelle Werbekunden-Seite mit Slideshow, Video, CTA</div>
+        <div class="comp-phase">Phase 2</div>
+      </div>
+      <div class="comp-card p2">
+        <div class="comp-name">travel-feature</div>
+        <div class="comp-desc">Reise-Story mit Karte, Route, Spots</div>
+        <div class="comp-phase">Phase 2</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PWA vs PORTAL ─────────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Positionierung</div>
+    <div class="section-title">PWA-Magazin vs. News-Portal</div>
+    <div class="section-sub">Beide Produkte existieren parallel — mit unterschiedlichem Zweck, Publikum und Erlebnis.</div>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>enduro-mtb.com</th>
+          <th class="blue">mag.enduro-mtb.com</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Erscheinung</td><td>Täglich, einzelne Artikel</td><td>3–4× pro Jahr, kuratierte Ausgaben</td></tr>
+        <tr><td>Format</td><td>Blog, einheitliches Template</td><td>Individuell gestaltet, Editorial Design</td></tr>
+        <tr><td>Navigation</td><td>Scrollen, Klicken</td><td>Swipe, immersives Blättern</td></tr>
+        <tr><td>Offline</td><td>Nein</td><td>Ja — ganze Ausgaben offline lesbar</td></tr>
+        <tr><td>Installation</td><td>Keine</td><td>Add to Homescreen, kein App Store</td></tr>
+        <tr><td>SEO</td><td>Voll indexierbar</td><td>Ausgaben indexierbar</td></tr>
+        <tr><td>Monetarisierung</td><td>Display Ads</td><td>Native Ads, Sponsored Content, Interstitials</td></tr>
+        <tr><td>Zielgruppe</td><td>Schnelle Info-Sucher</td><td>Treue Leser, tiefes Engagement</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ─── TEAM ──────────────────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Team-Modell</div>
+    <div class="section-title">Wer macht was</div>
+    <div class="section-sub">Schlankes Setup — AI-unterstützte Entwicklung mit menschlicher Architektur-Aufsicht.</div>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-role">Koordination & Content</div>
+        <div class="team-name">ENDURO Magazin</div>
+        <ul class="team-items">
+          <li>Inhalt, Assets, Redaktions-Koordination</li>
+          <li>Entscheidungen & Priorisierung</li>
+          <li>Testing & visuelles Feedback</li>
+          <li>Kommunikation Art Director</li>
+        </ul>
+      </div>
+      <div class="team-card">
+        <div class="team-role">Implementierung</div>
+        <div class="team-name">Claude Code (AI)</div>
+        <ul class="team-items">
+          <li>Komponenten-Code (Next.js)</li>
+          <li>Sanity-Schemas & Integration</li>
+          <li>Features, Bugfixes, Iteration</li>
+          <li>Geschwindigkeit & Dokumentation</li>
+        </ul>
+      </div>
+      <div class="team-card">
+        <div class="team-role">Tech-Beratung (Freelance)</div>
+        <div class="team-name">Senior Developer</div>
+        <ul class="team-items">
+          <li>Architektur-Review</li>
+          <li>Deployment & Hosting-Setup</li>
+          <li>Produktions-Absicherung</li>
+          <li>~10–20 Stunden / Monat</li>
+        </ul>
+      </div>
+      <div class="team-card">
+        <div class="team-role">Design</div>
+        <div class="team-name">Art Director</div>
+        <ul class="team-items">
+          <li>Komponenten-Design in Figma (einmalig)</li>
+          <li>Kuratierung & Reihenfolge pro Ausgabe</li>
+          <li>Bildauswahl in Sanity</li>
+          <li>Kein InDesign-Layout mehr pro Issue</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── NÄCHSTE SCHRITTE ──────────────────────────────────────────────── -->
+  <section>
+    <div class="section-tag">Roadmap</div>
+    <div class="section-title">Nächste Schritte</div>
+
+    <div class="workflow">
+      <div class="workflow-step">
+        <div class="step-num">→</div>
+        <div class="step-body">
+          <div class="step-title">Framework-Entscheidung</div>
+          <div class="step-desc">Next.js vs. Astro — Evaluierung anhand konkreter PWA-Anforderungen (Offline, Swipe-Navigation, Sanity-Integration)</div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">→</div>
+        <div class="step-body">
+          <div class="step-title">Sanity Setup & Schemas</div>
+          <div class="step-desc">Projekt aufsetzen, erste Content-Schemas für cover, article, bike-test definieren</div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">→</div>
+        <div class="step-body">
+          <div class="step-title">MVP-Komponenten bauen</div>
+          <div class="step-desc">Prototype in echtes Framework überführen, alle 7 MVP-Komponenten implementieren</div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">→</div>
+        <div class="step-body">
+          <div class="step-title">Freelance Developer einbinden</div>
+          <div class="step-desc">Architektur-Review, Deployment bei Vercel, Staging-Umgebung aufsetzen</div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">→</div>
+        <div class="step-body">
+          <div class="step-title">Testausgabe Issue #066</div>
+          <div class="step-desc">Echte Ausgabe komplett in Sanity durchspielen — von Content-Eingabe bis Live-Publish</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">ENDURO PWA · 2026</div>
+    <div class="footer-meta">Prototyp: prototype/index.html · Architektur: prototype/architektur.html</div>
+  </footer>
+
+</div>
+</body>
+</html>

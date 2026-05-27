@@ -1,0 +1,25 @@
+{
+  "name": "pwa-reader-41-magazin",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PWA-Reader (Pilot) — rendert das Editorial aus Sanity im Magazin-Look",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "@portabletext/react": "^6.2.0",
+    "@sanity/client": "^7.22.0",
+    "@sanity/image-url": "^2.1.1",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,309 @@
+:root {
+  --accent: #00a8e8;
+  --ink: #0c0c0d;
+  --paper: #ffffff;
+  --muted: #6b6b70;
+  --line: #e6e6e8;
+  --maxText: 720px;
+  --maxWide: 1200px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Einblend-Animation bei jedem Artikelwechsel.
+   Bewusst OHNE fill-mode (kein 'both') — danach bleibt kein transform stehen,
+   sonst würde der sticky Masthead brechen. */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: pageEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter { animation: none; }
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  line-height: 1.65;
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+
+/* ---------- Magazin-Kopfzeile ---------- */
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.masthead .brand { font-weight: 700; }
+.masthead .issue { color: var(--muted); }
+
+/* ---------- Titelseite ---------- */
+.titlepage {
+  position: relative;
+  min-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 80px 24px;
+  color: #fff;
+  background: var(--ink);
+  overflow: hidden;
+}
+.titlepage.has-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65));
+}
+.titlepage .bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.titlepage .inner { position: relative; z-index: 1; max-width: 900px; }
+.titlepage .eyebrow {
+  font-size: 14px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 22px;
+  font-weight: 600;
+}
+.titlepage h1 {
+  font-size: clamp(2.6rem, 8vw, 5.5rem);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.titlepage .subtitle { margin-top: 22px; font-size: 1.25rem; opacity: 0.9; }
+
+/* ---------- Artikel-Fluss ---------- */
+.article { padding-bottom: 120px; }
+
+.prose {
+  max-width: var(--maxText);
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+.prose p { margin: 0 0 1.1em; }
+.prose p:first-child:first-letter {
+  /* dezenter Initial nur ganz am Anfang nicht nötig — bewusst schlicht */
+}
+.prose h2 {
+  font-size: 1.7rem;
+  line-height: 1.2;
+  margin: 1.4em 0 0.5em;
+  letter-spacing: -0.01em;
+}
+.prose h3 { font-size: 1.3rem; margin: 1.2em 0 0.4em; }
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 20px;
+  margin: 1.4em 0;
+  font-style: italic;
+  color: #333;
+}
+.prose ul, .prose ol { margin: 0 0 1.1em 1.3em; }
+.prose a { color: var(--accent); text-decoration: underline; }
+
+/* iOS-Data-Detector-Links (Datum/Telefon) neutralisieren — sollen nicht blau erscheinen */
+a[x-apple-data-detectors] {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Lead-Absatz: der erste Textblock etwas größer */
+.lead .prose p { font-size: 1.3rem; line-height: 1.55; color: #1a1a1c; }
+
+/* ---------- Vollbild-Foto ---------- */
+.fullbleed { margin: 40px 0; }
+.fullbleed img { width: 100%; max-height: 92vh; object-fit: cover; }
+.caption {
+  max-width: var(--maxWide);
+  margin: 10px auto 0;
+  padding: 0 24px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- Foto-Grid ---------- */
+.grid {
+  max-width: var(--maxWide);
+  margin: 40px auto;
+  padding: 0 24px;
+  display: grid;
+  gap: 12px;
+}
+.grid.cols-1 { grid-template-columns: 1fr; }
+.grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 2px; }
+
+/* ---------- Pull-Quote ---------- */
+.pullquote {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.pullquote p {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.pullquote .attribution { margin-top: 16px; font-size: 1rem; color: var(--muted); font-weight: 400; }
+
+/* ---------- Signatur ---------- */
+.signature {
+  max-width: var(--maxText);
+  margin: 40px auto 0;
+  padding: 36px 24px 0;
+  border-top: 1px solid var(--line);
+  white-space: pre-line;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+.signature .by { font-weight: 700; }
+
+.empty { padding: 120px 24px; text-align: center; color: var(--muted); }
+
+/* ---------- Swipe-Carousel (Fotos-App-Gefühl) ---------- */
+.carousel-viewport {
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
+}
+.carousel-track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+.carousel-panel {
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* vertikal scrollt der Browser, horizontal übernimmt das Carousel */
+  touch-action: pan-y;
+}
+
+/* ---------- Kiosk / Inhaltsverzeichnis ---------- */
+.kiosk-hero {
+  padding: 90px 24px 50px;
+  text-align: center;
+  background: var(--ink);
+  color: #fff;
+}
+.kiosk-hero .eyebrow {
+  font-size: 14px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+.kiosk-hero h1 {
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 14px;
+}
+.kiosk-hero .kiosk-sub { margin-top: 12px; color: #b9b9bd; font-size: 0.95rem; }
+
+.kiosk-grid {
+  max-width: var(--maxWide);
+  margin: 0 auto;
+  padding: 44px 24px 100px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease;
+}
+.card:hover { transform: translateY(-4px); }
+.card-thumb { aspect-ratio: 3 / 2; overflow: hidden; border-radius: 4px; background: #f0f0f2; }
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card-thumb.placeholder { background: linear-gradient(135deg, #e9eef2, #d6dde3); }
+.card-body { padding: 14px 2px 0; }
+.card-cat {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+.card-title { font-size: 1.25rem; font-weight: 700; line-height: 1.2; margin-top: 6px; letter-spacing: -0.01em; }
+
+/* ---------- Generischer Artikel-Header (falls keine Titelseite) ---------- */
+.article-header { padding-top: 60px; }
+.article-header .eyebrow.dark {
+  font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin-bottom: 10px;
+}
+.article-header h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+.article-header .byline { color: var(--muted); margin-top: 12px; }
+
+/* ---------- Masthead-Zurück-Link ---------- */
+.masthead .brand.back { text-decoration: none; color: var(--ink); }
+.masthead .brand.back:hover { color: var(--accent); }
+
+/* ---------- Blätter-Navigation ---------- */
+.pager {
+  max-width: var(--maxWide);
+  margin: 80px auto 0;
+  padding: 36px 24px 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.pager-link { text-decoration: none; color: inherit; display: flex; flex-direction: column; max-width: 45%; }
+.pager-link.next { text-align: right; align-items: flex-end; }
+.pager-link span { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.pager-link strong { font-size: 1.05rem; font-weight: 700; margin-top: 4px; }
+.pager-link:hover strong { color: var(--accent); }
+
+/* Wisch-Hinweis: nur auf Touch/Mobile sichtbar */
+.swipe-hint { display: none; }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 720px) {
+  body { font-size: 17px; }
+  .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; }
+  .swipe-hint {
+    display: block;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    margin: 60px 0 -20px;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "sanity-studio-41-magazin",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sanity Studio — 41 Publishing Magazin-PWA (Pilot, E-MTB #042)",
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  },
+  "dependencies": {
+    "@sanity/vision": "^5.26.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "sanity": "^5.26.0",
+    "sanity-plugin-media": "^4.3.0",
+    "styled-components": "^6.4.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "typescript": "^6.0.3"
+  }
+}

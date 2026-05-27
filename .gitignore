@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build-Output
+.next/
+dist/
+out/
+
+# Secrets / Umgebungsvariablen
+.env*
+
+# OS / Editor
+.DS_Store
+*.log
+
+# Große Binär-Assets bewusst NICHT in der Git-Historie (Quelle liegt in Google Drive).
+# Zum Versionieren einzelne Zeile entfernen.
+/pilot-content/
+/aktuelle ausgabe/
+/dummie contetn/

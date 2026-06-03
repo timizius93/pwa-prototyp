@@ -2,19 +2,22 @@
 
 import {useEffect, useRef, useState, useCallback} from 'react'
 import {ArticleView} from './ArticleView'
+import {AdView} from './AdView'
 
-// Lücke zwischen den Artikeln (wie der weiße Rand zwischen Fotos in der iPhone-Fotos-App)
+// Lücke zwischen den Panels (wie der weiße Rand zwischen Fotos in der iPhone-Fotos-App)
 const GAP = 24
 
 // Interaktives Swipe-Carousel im Stil der iPhone-Fotos-App:
-// Der Artikel folgt dem Finger, der Nachbar lugt rein, beim Loslassen schnappt es weiter/zurück.
+// Der Inhalt folgt dem Finger, der Nachbar lugt rein, beim Loslassen schnappt es weiter/zurück.
+// Panels sind entweder Artikel (`_panelType: 'article'`) oder Anzeigen (`_panelType: 'ad'`).
 export function ArticleCarousel({
-  articles,
+  panels,
   startIndex,
 }: {
-  articles: any[]
+  panels: any[]
   startIndex: number
 }) {
+  const articles = panels // alte Variable umgemappt — der gesamte Drag/Drop-Code unten ist neutral
   const [index, setIndex] = useState(startIndex)
   const [dragX, setDragX] = useState(0)
   const [animating, setAnimating] = useState(false)
@@ -119,20 +122,26 @@ export function ArticleCarousel({
         }}
         onTransitionEnd={() => setAnimating(false)}
       >
-        {articles.map((a, i) => (
-          <div className="carousel-panel" key={a.slug || i}>
-            <ArticleView
-              data={a}
-              nav={{
-                prev: i > 0 ? {slug: articles[i - 1].slug, title: articles[i - 1].title} : null,
-                next:
-                  i < articles.length - 1
-                    ? {slug: articles[i + 1].slug, title: articles[i + 1].title}
-                    : null,
-              }}
-            />
-          </div>
-        ))}
+        {articles.map((a, i) => {
+          // Nav-Titel-Fallback: Anzeigen haben kein `title`, also „Anzeige · <Sponsor>"
+          const navTitle = (p: any) =>
+            p._panelType === 'ad' ? `Anzeige · ${p.sponsor || ''}`.trim() : p.title
+          const prev = i > 0 ? {slug: articles[i - 1].slug, title: navTitle(articles[i - 1])} : null
+          const next =
+            i < articles.length - 1
+              ? {slug: articles[i + 1].slug, title: navTitle(articles[i + 1])}
+              : null
+
+          return (
+            <div className="carousel-panel" key={a.slug || i}>
+              {a._panelType === 'ad' ? (
+                <AdView data={a} />
+              ) : (
+                <ArticleView data={a} nav={{prev, next}} />
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

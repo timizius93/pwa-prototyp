@@ -54,6 +54,13 @@ export const article = defineType({
         {type: 'fullbleedPhoto'},
         {type: 'photoGrid'},
         {type: 'pullQuote'},
+        {type: 'specLine'},
+        {type: 'hotspotImage'},
+        {type: 'geometryOverlay'},
+        {type: 'interactiveBike'},
+        {type: 'tuningTip'},
+        {type: 'verdictPanel'},
+        {type: 'ctaBlock'},
       ],
     }),
     defineField({
@@ -70,6 +77,16 @@ export const article = defineType({
       type: 'reference',
       to: [{type: 'issue'}],
       group: 'meta',
+    }),
+    defineField({
+      name: 'position',
+      title: 'Position in der Ausgabe',
+      type: 'number',
+      group: 'meta',
+      description:
+        'Bestimmt die Reihenfolge im Reader-Carousel (kleiner = früher). Teilt sich den Werteraum ' +
+        'mit den Anzeigen derselben Ausgabe — Anzeigen werden über ihre `position` zwischen die ' +
+        'Artikel geschoben. Tipp: Schritte von 10.',
     }),
     defineField({
       name: 'slug',

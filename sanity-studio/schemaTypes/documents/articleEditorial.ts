@@ -66,6 +66,15 @@ export const articleEditorial = defineType({
       group: 'meta',
     }),
     defineField({
+      name: 'position',
+      title: 'Position in der Ausgabe',
+      type: 'number',
+      group: 'meta',
+      description:
+        'Reihenfolge im Reader-Carousel (kleiner = früher). Teilt sich den Werteraum ' +
+        'mit den Anzeigen derselben Ausgabe.',
+    }),
+    defineField({
       name: 'category',
       title: 'Kategorie',
       type: 'string',

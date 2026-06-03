@@ -18,3 +18,7 @@ out/
 /pilot-content/
 /aktuelle ausgabe/
 /dummie contetn/
+/Cover Erstellung/
+
+# Debug-Artefakte (Screenrecordings + extrahierte Frames) — nicht versionieren.
+/Bug/

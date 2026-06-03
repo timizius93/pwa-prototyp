@@ -6,6 +6,9 @@
   --line: #e6e6e8;
   --maxText: 720px;
   --maxWide: 1200px;
+  /* Höhe der Sticky-Masthead — wird vom Cover-Hero kompensiert (margin-top), damit das
+     Cover-Artwork volle 100dvh füllt und der Masthead transparent darüber schwebt. */
+  --masthead-h: 52px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,34 +58,46 @@ img { display: block; max-width: 100%; }
 .masthead .brand { font-weight: 700; }
 .masthead .issue { color: var(--muted); }
 
-/* ---------- Titelseite ---------- */
+/* ---------- Titelseite ----------
+   Drei Modi (siehe titlePage.ts):
+   - .has-bg ohne .has-fg → Editorial: Foto + dim-Overlay + Text mittig
+   - .has-bg + .has-fg    → Print-Cover (3-Layer-Stack): Foto, Text, freigestelltes Subject
+   - .is-custom           → Notausgang: ein einziges Cover-Bild ersetzt alles
+   Foto + Foreground brauchen den gleichen Crop / dieselbe Canvas-Größe, sonst läuft der Subject-Layer raus. */
 .titlepage {
   position: relative;
-  min-height: 78vh;
+  min-height: 92vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 80px 24px;
+  padding: 80px 24px 100px;
   color: #fff;
   background: var(--ink);
   overflow: hidden;
+  /* Magazin-spezifischer Akzent fürs Cover-Headline-Gelb (Platzhalter — final aus magazine.primaryColor
+     oder per Title-Page-Override). E-MTB-Heft nutzt aktuell diesen Gelbton. */
+  --titlepage-accent: #e9b53e;
 }
-.titlepage.has-bg::after {
+/* Dim-Overlay nur, wenn KEIN Vordergrund-Layer da ist — sonst wäre das Cover-Foto doppelt abgedunkelt
+   (Designer hat Verläufe bereits im Foto). */
+.titlepage.has-bg:not(.has-fg)::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65));
 }
-.titlepage .bg {
+.titlepage .bg,
+.titlepage .fg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.titlepage .inner { position: relative; z-index: 1; max-width: 900px; }
+.titlepage .fg { z-index: 2; pointer-events: none; }
+.titlepage .inner { position: relative; z-index: 1; max-width: 1100px; }
 .titlepage .eyebrow {
   font-size: 14px;
   letter-spacing: 0.28em;
@@ -98,6 +113,102 @@ img { display: block; max-width: 100%; }
   letter-spacing: -0.02em;
 }
 .titlepage .subtitle { margin-top: 22px; font-size: 1.25rem; opacity: 0.9; }
+
+/* Print-Cover-Variante: deutlich größere Versalien-Typo + Sperrschrift-Subtitle */
+.titlepage.has-fg h1 {
+  font-size: clamp(3.2rem, 16vw, 10rem);
+  line-height: 0.92;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--titlepage-accent);
+  /* sanfter Kontrast-Boost ohne harten Schlagschatten */
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.25);
+}
+.titlepage.has-fg .subtitle {
+  margin-top: 28px;
+  font-size: clamp(0.95rem, 2.2vw, 1.4rem);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #fff;
+  opacity: 1;
+}
+.titlepage.has-fg .eyebrow { color: var(--titlepage-accent); }
+
+/* Credits-Zeile unten — liegt ÜBER dem Vordergrund (z-index 3) */
+.titlepage .credits {
+  position: absolute;
+  bottom: 28px;
+  left: 24px;
+  right: 24px;
+  z-index: 3;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  opacity: 0.92;
+}
+
+/* Cover-Modus: durchgestaltetes Cover-Bild füllt den ersten Screen vollflächig (100dvh).
+   dvh statt vh, damit Safari-iOS' Toolbar-Höhe sauber abgezogen wird.
+   margin-top schluckt die Masthead-Höhe, damit das Cover hinter den (transparenten) Masthead
+   reicht und visuell die volle Viewport-Höhe füllt. */
+.titlepage.is-cover {
+  position: relative;
+  padding: 0;
+  margin-top: calc(-1 * var(--masthead-h));
+  height: 100dvh;
+  min-height: 100dvh;
+  background: #000;
+  display: block;
+}
+/* Sanfte Top-Vignette, damit der transparente Masthead auch über hellen Cover-Bereichen
+   (Himmel, weiße Hintergründe) lesbar bleibt. Verläuft schnell aus → fällt visuell kaum auf. */
+.titlepage.is-cover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--masthead-h) + 48px);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.titlepage.is-cover picture,
+.titlepage.is-cover .cover-art {
+  display: block;
+  width: 100%;
+  height: 100dvh;
+  object-fit: cover;
+}
+
+/* Über dem Cover schwebt der Masthead transparent, damit das Cover unangeschnitten lesbar bleibt.
+   Sobald der Cover-Block aus dem Viewport scrollt (.is-past-hero, gesetzt vom IntersectionObserver
+   in ArticleView), kehrt der Masthead in den normalen, soliden Zustand zurück. */
+.article-page.has-cover-hero .masthead {
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+  color: rgba(255, 255, 255, 0.95);
+  /* Zusätzliche Schärfe für die Lesbarkeit, falls die Top-Vignette mal nicht reicht. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
+    text-shadow 0.25s ease;
+}
+.article-page.has-cover-hero .masthead .brand.back { color: inherit; }
+.article-page.has-cover-hero .masthead .issue { color: rgba(255, 255, 255, 0.75); }
+.article-page.has-cover-hero.is-past-hero .masthead {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom-color: var(--line);
+  color: var(--ink);
+  text-shadow: none;
+}
+.article-page.has-cover-hero.is-past-hero .masthead .issue { color: var(--muted); }
 
 /* ---------- Artikel-Fluss ---------- */
 .article { padding-bottom: 120px; }
@@ -190,6 +301,489 @@ a[x-apple-data-detectors] {
 .signature .by { font-weight: 700; }
 
 .empty { padding: 120px 24px; text-align: center; color: var(--muted); }
+
+/* ---------- Spec-Zeile ---------- */
+.specline {
+  max-width: var(--maxText);
+  margin: 8px auto 0;
+  padding: 18px 24px;
+}
+.specline ul {
+  list-style: none;
+  margin: 0;
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  background: #f5f6f8;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+.specline li {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  position: relative;
+  padding-right: 18px;
+}
+.specline li:not(:last-child)::after {
+  content: '|';
+  position: absolute;
+  right: 0;
+  color: var(--line);
+  font-weight: 400;
+}
+.specline-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- Tuning-Tipp ---------- */
+.tuningtip {
+  max-width: var(--maxText);
+  margin: 32px auto;
+  padding: 18px 22px;
+  background: #fff7e6;
+  border: 1px solid #ffe2a8;
+  border-radius: 10px;
+}
+.tuningtip-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b8770a;
+  margin-bottom: 6px;
+}
+.tuningtip p { font-size: 1.05rem; font-weight: 600; line-height: 1.4; }
+
+/* ---------- Interaktives Foto (Hotspots) ---------- */
+.hotspot-figure { margin: 40px 0; }
+.hotspot-stage {
+  position: relative;
+  max-width: var(--maxWide);
+  margin: 0 auto;
+}
+.hotspot-base { width: 100%; height: auto; display: block; }
+
+.hotspot-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+}
+.hotspot-marker .dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  position: relative;
+  transition: transform 0.18s ease;
+}
+.hotspot-marker .dot::before,
+.hotspot-marker .dot::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 2px;
+}
+.hotspot-marker .dot::before { left: 50%; top: 8px; bottom: 8px; width: 2px; transform: translateX(-50%); }
+.hotspot-marker .dot::after { top: 50%; left: 8px; right: 8px; height: 2px; transform: translateY(-50%); }
+.hotspot-marker:hover .dot { transform: scale(1.12); }
+/* sanftes Pulsieren, damit die Punkte als „klick mich" lesbar sind */
+.hotspot-marker .dot { animation: hotspotPulse 2.4s ease-in-out infinite; }
+@keyframes hotspotPulse {
+  0%, 100% { box-shadow: 0 2px 10px rgba(0,0,0,0.35), 0 0 0 0 rgba(0,168,232,0.45); }
+  50% { box-shadow: 0 2px 10px rgba(0,0,0,0.35), 0 0 0 10px rgba(0,168,232,0); }
+}
+.hotspot-marker.is-open .dot { animation: none; transform: scale(1.12); }
+@media (prefers-reduced-motion: reduce) {
+  .hotspot-marker .dot { animation: none; }
+}
+
+.hotspot-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  padding: 18px;
+}
+.hotspot-card {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.4);
+  animation: hotspotIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes hotspotIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hotspot-detail { width: 100%; height: auto; display: block; }
+.hotspot-text { padding: 14px 18px 18px; }
+.hotspot-text strong { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+.hotspot-text p { font-size: 0.95rem; line-height: 1.5; color: #333; }
+.hotspot-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.hotspot-hint {
+  max-width: var(--maxWide);
+  margin: 10px auto 0;
+  padding: 0 24px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- Fazit + Tops/Flops (Overlay über Foto) ---------- */
+.verdict {
+  position: relative;
+  margin: 48px 0;
+  min-height: 70vh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  color: #fff;
+}
+.verdict-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.verdict::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.verdict.overlay-gradient::after { background: linear-gradient(180deg, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.82)); }
+.verdict.overlay-dark::after { background: rgba(0,0,0,0.62); }
+.verdict.overlay-light { color: var(--ink); }
+.verdict.overlay-light::after { background: rgba(255,255,255,0.7); }
+.verdict-inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--maxText);
+  margin: 0 auto;
+  width: 100%;
+  padding: 40px 24px 48px;
+}
+.verdict-inner h2 { font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 800; letter-spacing: -0.02em; }
+.verdict-text { margin: 16px 0 24px; font-size: 1.1rem; line-height: 1.55; }
+.verdict-cols { display: flex; flex-wrap: wrap; gap: 28px; }
+.verdict-cols > div { flex: 1 1 220px; }
+.verdict-cols h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.verdict-tops h3 { color: #4ade80; }
+.verdict-flops h3 { color: #f87171; }
+.verdict-cols ul { list-style: none; margin: 0; padding: 0; }
+.verdict-cols li {
+  font-size: 0.98rem;
+  line-height: 1.4;
+  padding-left: 22px;
+  position: relative;
+  margin-bottom: 7px;
+}
+.verdict-tops li::before { content: '+'; position: absolute; left: 0; color: #4ade80; font-weight: 800; }
+.verdict-flops li::before { content: '−'; position: absolute; left: 0; color: #f87171; font-weight: 800; }
+
+/* ---------- Geometrie (interaktiv, Maßlinien-Overlay) ---------- */
+.geo {
+  max-width: var(--maxWide);
+  margin: 48px auto;
+  padding: 0 24px;
+}
+.geo-stage {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1c;
+}
+.geo-photo { width: 100%; display: block; }
+.geo-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+}
+.geo-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.geo-svg line,
+.geo-svg .geo-arc {
+  stroke: #fff;
+  stroke-width: 1.5;
+  fill: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  /* KEIN opacity hier — würde sonst die marker-Pfeilspitzen mit transparent machen */
+}
+/* gestrichelte Vertikal-Referenz bei Winkel-Annotationen — etwas zurückhaltender als das Tube */
+.geo-svg line.geo-ref { opacity: 0.55; }
+.geo-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: clamp(11px, 1.6vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  /* deckt die darunterliegende Linie ab, damit Zahl und Linie sich nicht überlagern */
+  background: rgba(16, 16, 18, 0.6);
+  padding: 1px 7px;
+  border-radius: 5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  animation: geoLabelIn 0.25s ease;
+}
+@keyframes geoLabelIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .geo-label, .geo-legend { animation: none; }
+}
+.geo-sizebadge {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+.geo-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.geo-switch-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-right: 4px;
+}
+.geo-size {
+  flex: 1;
+  padding: 12px 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.geo-size:hover { border-color: var(--accent); color: var(--ink); }
+.geo-size.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.geo-disclaimer {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+}
+/* Nummerierter Marker auf der Linie — nur auf dem Phone sichtbar (s. Media-Query) */
+.geo-marker {
+  display: none;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+/* Werte-Liste unter dem Foto — nur auf dem Phone (Desktop zeigt Werte direkt auf der Linie) */
+.geo-legend-wrap { display: none; margin-top: 14px; }
+.geo-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.geo-legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line);
+}
+.geo-legend-n {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+.geo-legend-name { flex: 1; font-size: 0.95rem; color: var(--ink); }
+.geo-legend-val {
+  flex: none;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.geo-legend-toggle {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.geo-legend-toggle:hover { border-color: var(--accent); }
+
+/* ---------- Interaktives Bike (Kombi: Details ↔ Geometrie auf EINEM Foto) ---------- */
+.ibike {
+  max-width: var(--maxWide);
+  margin: 48px auto;
+  padding: 0 24px;
+}
+/* Segmented-Control im iOS-Stil */
+.ibike-toggle {
+  display: flex;
+  max-width: 340px;
+  margin: 0 auto 16px;
+  padding: 4px;
+  background: #f0f0f2;
+  border-radius: 999px;
+}
+.ibike-toggle button {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.ibike-toggle button[aria-selected='true'] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.ibike-stage {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1c;
+}
+.ibike-photo { width: 100%; display: block; }
+/* sanftes Einblenden der Overlays beim Moduswechsel (Foto bleibt stehen) */
+.ibike-fade { animation: geoLabelIn 0.25s ease; }
+.ibike-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ibike-fade { animation: none; }
+}
+/* Detail-Popup als echtes Vollbild-Modal (per Portal an <body>) — wird nie abgeschnitten */
+.ibike-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+.ibike-popup .hotspot-card { max-height: 88vh; overflow-y: auto; }
+.ibike-popup .hotspot-detail { max-height: 52vh; object-fit: cover; }
+
+/* ---------- Call-to-Action ---------- */
+.cta {
+  max-width: var(--maxText);
+  margin: 40px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.cta-headline { font-size: 1.1rem; margin-bottom: 14px; color: var(--muted); }
+.cta-button {
+  display: inline-block;
+  padding: 14px 28px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.cta-button:hover { filter: brightness(1.07); }
 
 /* ---------- Swipe-Carousel (Fotos-App-Gefühl) ---------- */
 .carousel-viewport {
@@ -306,4 +900,517 @@ a[x-apple-data-detectors] {
     letter-spacing: 0.06em;
     margin: 60px 0 -20px;
   }
+  /* Geometrie auf dem Phone: Werte raus vom Bild, rein in die Liste */
+  .geo-label { display: none; }
+  .geo-marker { display: block; }
+  .geo-legend-wrap { display: block; }
+  .geo-legend { animation: geoLabelIn 0.25s ease; }
+  /* Foto randlos — bricht aus der 24px-Spalte aus (Switcher/Liste bleiben eingerückt) */
+  .geo-stage,
+  .ibike-stage {
+    margin-left: -24px;
+    margin-right: -24px;
+    border-radius: 0;
+  }
+  .geo-switch { margin-top: 18px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   WERBUNG
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* AD-Karte im Kiosk: identisches Layout zur Artikel-Card, aber mit
+   dezenter Tönung + AD-Badge oben rechts auf dem Thumb. */
+.card--ad .card-thumb { background: #1a1a1d; }
+.card--ad .card-thumb { position: relative; }
+.card-ad-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  border-radius: 3px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Anzeigen-Panel im Carousel: schwarzer Letterbox-Rahmen signalisiert die
+   andere Inhalts-Ebene (so wie heute Anzeigen im Heft eingerahmt sind). */
+.ad-view {
+  min-height: 100dvh;
+  background: #0a0a0c;
+  color: #f4f4f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.ad-view__sponsor-label {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  padding: 10px 16px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  z-index: 2;
+}
+
+/* Standard-Anzeige = full-bleed, vertikal scrollbar wie die alte Querformat-App:
+   die Anzeige füllt die Panel-Breite, man scrollt durch die „Screens" (je 16:9). */
+.ad-view--standard {
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Screen-Snapping in beiden Orientierungen: ein Bild füllt bei voller Breite ≈ eine
+   Bildschirmhöhe (quer das 16:9-Bild, hoch die Hochformat-Variante), also rastet jeder
+   Screen sauber ein („Umblättern" wie in der bisherigen App). */
+.ad-view--standard {
+  scroll-snap-type: y mandatory;
+}
+.ad-view--standard .ad-view__image-block {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Bilder gestapelt, randlos, ohne Lücke — eine durchgehende scrollbare Anzeigenfläche. */
+.ad-view__stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.ad-view__image-block {
+  position: relative;
+  line-height: 0;
+  background: #000;
+}
+/* Jede Orientierungs-Variante trägt ihre eigenen Klick-Zonen (absolut zum Bild). */
+.ad-view__variant {
+  position: relative;
+  line-height: 0;
+}
+/* Hochformat-Variante standardmäßig (und serverseitig) versteckt — nur im Hochformat zeigen. */
+.ad-view__variant--portrait {
+  display: none;
+}
+@media (orientation: portrait) {
+  /* Im Hochformat das Querbild ausblenden — ABER nur, wenn es eine Mobil-Variante gibt
+     (sonst bleibt das Querbild als Fallback sichtbar). */
+  .ad-view__variant--landscape.has-mobile {
+    display: none;
+  }
+  .ad-view__variant--portrait {
+    display: block;
+  }
+}
+.ad-view__image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.ad-view__zone {
+  position: absolute;
+  cursor: pointer;
+  /* Print-treu unsichtbar — nur Cursor-Pointer + (einmaliger) Toast erklären die Klickbarkeit. */
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  /* Mini-Tap-Feedback nur beim Drücken (mobil), damit der User sieht „ich hab was getroffen" */
+  -webkit-tap-highlight-color: rgba(0, 168, 232, 0.18);
+}
+.ad-view__zone:focus-visible {
+  outline: 2px solid #00a8e8;
+  outline-offset: 2px;
+}
+
+/* Optionale Lightbox-Galerie unter den Anzeigen-Bildern. */
+.ad-view__gallery {
+  margin-top: 24px;
+  padding: 24px 24px 80px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ad-view__gallery-title {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 12px;
+}
+.ad-view__gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+.ad-view__gallery-thumb {
+  border: 0;
+  padding: 0;
+  background: #000;
+  cursor: pointer;
+  line-height: 0;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.ad-view__gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+}
+.ad-view__lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  cursor: zoom-out;
+}
+.ad-view__lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  object-fit: contain;
+}
+.ad-view__lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 0;
+  font-size: 22px;
+  line-height: 36px;
+  cursor: pointer;
+}
+/* Slideshow-Navigation in der Lightbox */
+.ad-view__lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 0;
+  font-size: 30px;
+  line-height: 48px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.ad-view__lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.ad-view__lightbox-nav.prev {
+  left: 18px;
+}
+.ad-view__lightbox-nav.next {
+  right: 18px;
+}
+.ad-view__lightbox-counter {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 720px) {
+  .ad-view__lightbox-nav {
+    width: 44px;
+    height: 44px;
+    font-size: 26px;
+    line-height: 40px;
+  }
+}
+
+/* First-Visit-Toast: erklärt unsichtbare Klick-Zonen einmal pro Session. */
+.ad-view__toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 14px;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  animation: adToastIn 0.25s ease, adToastOut 0.4s ease 2.6s forwards;
+  pointer-events: none;
+}
+@keyframes adToastIn {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes adToastOut {
+  to { opacity: 0; transform: translate(-50%, 12px); }
+}
+
+/* Custom-Ad: kein Letterbox — die Komponente liefert ihr eigenes Layout.
+   Sponsor-Label schwebt als Overlay (absolute), damit es den 100dvh-Inhalt der
+   Komponente NICHT nach unten schiebt (sonst rutscht der Slogan unter die Fold). */
+.ad-view--custom {
+  background: #000;
+  padding: 0;
+}
+.ad-view--custom .ad-view__sponsor-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.ad-view--custom-missing {
+  padding: 60px 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ad-view--custom-missing code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.ad-view__loading {
+  padding: 80px 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SPECIALIZED LEVO 4 — Custom-Ad
+   Lebte vorher als <style jsx> in der Komponente, war auf iOS Safari aber
+   im Carousel-Kontext nicht zuverlässig appliziert.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.splz {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.splz__hero {
+  position: absolute;
+  inset: 0;
+  background-image: url('/ads/specialized-levo-4/hero.webp');
+  background-size: cover;
+  background-position: center;
+  will-change: transform;
+  z-index: 0;
+}
+.splz__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Der gesamte Vordergrund in EINEM eigenen Compositing-Layer. translateZ(0) zwingt
+   iOS Safari, diesen Layer ÜBER den (durch die Parallax transformierten, ebenfalls
+   composited) Hero zu malen. Ohne das ignorierte iOS den z-index und malte den Text
+   hinter den Hero → unsichtbar. */
+.splz__content {
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.splz__header {
+  padding: 36px 40px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+/* Logo als weiße CSS-Maske aus dem schwarzen SVG (statt filter-invertiertem <img>).
+   filter:invert auf einem SVG-<img> rendert auf iOS Safari unzuverlässig — mask ist
+   robust. Aspect aus dem SVG-viewBox 627×147. */
+.splz__logo {
+  display: block;
+  width: 220px;
+  max-width: 42vw;
+  aspect-ratio: 627 / 147;
+  background-color: #fff;
+  -webkit-mask: url('/ads/specialized-levo-4/specialized-logo.svg') no-repeat center / contain;
+  mask: url('/ads/specialized-levo-4/specialized-logo.svg') no-repeat center / contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+/* Badge: rechteckiges PNG mit schwarzen Rändern; overflow:hidden begrenzt nur den
+   Shimmer-Sweep, kein border-radius (sonst schneidet's die Lorbeer-Ecken ab). */
+.splz__badge-wrap {
+  position: relative;
+  width: 130px;
+  max-width: 28vw;
+  line-height: 0;
+  overflow: hidden;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5));
+}
+.splz__badge {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.splz__badge-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: shimmerSweep 6s ease-in-out 2s infinite;
+  pointer-events: none;
+}
+@keyframes shimmerSweep {
+  0%   { transform: translateX(-120%); }
+  22%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+.splz__bottom {
+  padding: 0 40px 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+.splz__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.splz__model {
+  font-size: clamp(0.95rem, 1.7vw, 1.2rem);
+  letter-spacing: 0.32em;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 18px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+.splz__slogan {
+  font-size: clamp(2.4rem, 6.2vw, 4.6rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* Outline-CTA — Hover-Effekt füllt mit Lightning-Crop aus dem Hero. */
+.splz__cta {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  flex: 0 0 auto;
+  align-self: flex-end;
+  margin-bottom: 6px;
+  padding: 18px 36px;
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  letter-spacing: 0.01em;
+  border: 1.5px solid #fff;
+  border-radius: 10px;
+  transition: border-color 0.3s ease, box-shadow 0.4s ease, transform 0.25s ease;
+  white-space: nowrap;
+}
+.splz__cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/ads/specialized-levo-4/hero.webp');
+  background-repeat: no-repeat;
+  background-size: 260% auto;
+  background-position: 18% 30%;
+  opacity: 0;
+  transform: scale(1.1);
+  transition: opacity 0.45s ease, transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), background-position 6s linear;
+  z-index: -1;
+}
+.splz__cta:hover {
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    0 0 32px 4px rgba(96, 180, 255, 0.45),
+    0 10px 38px rgba(40, 110, 220, 0.4);
+  transform: translateY(-2px);
+}
+.splz__cta:hover::before {
+  opacity: 1;
+  transform: scale(1);
+  background-position: 26% 22%;
+}
+.splz__cta:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+
+/* Mobile-Layout */
+@media (max-width: 720px) {
+  .splz__header {
+    padding: 28px 24px 0;
+    align-items: center;
+  }
+  .splz__logo { width: 160px; }
+  .splz__badge-wrap { width: 90px; }
+
+  .splz__bottom {
+    padding: 0 24px 36px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .splz__cta {
+    align-self: stretch;
+    text-align: center;
+    margin-bottom: 0;
+  }
+}
+
+/* Debug-Overlay (?debug=1) — Computed-Styles der kritischen Elemente direkt auf dem
+   Screen, damit wir auf dem iPhone Ground Truth haben ohne Web-Inspector. */
+.splz__debug {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 9999;
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #0f0;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  border-radius: 6px;
+  pointer-events: none;
 }

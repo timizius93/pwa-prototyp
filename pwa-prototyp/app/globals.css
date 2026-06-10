@@ -55,8 +55,31 @@ img { display: block; max-width: 100%; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.masthead .brand { font-weight: 700; }
-.masthead .issue { color: var(--muted); }
+.masthead .brand { font-weight: 700; flex-shrink: 0; }
+.masthead .issue { color: var(--muted); flex-shrink: 0; }
+/* Aktueller Artikel-Titel, mittig, abgeschnitten bei Überlänge (kein Uppercase — soll als
+   Titel lesen, nicht als Label). */
+.masthead-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0 16px;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Cover-Hero: Titel erst einblenden, wenn man am Cover vorbei ist (sonst doppelt mit dem
+   großen Cover-Titel). Reuse des is-past-hero-States. */
+.article-page.has-cover-hero .masthead-title {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.article-page.has-cover-hero.is-past-hero .masthead-title { opacity: 1; }
 
 /* ---------- Titelseite ----------
    Drei Modi (siehe titlePage.ts):
@@ -217,6 +240,11 @@ img { display: block; max-width: 100%; }
   max-width: var(--maxText);
   margin: 0 auto;
   padding: 28px 24px;
+  /* nur überlange Wörter (deutsche Komposita) umbrechen, die sonst den Viewport sprengen
+     → kein horizontaler Scroll. break-word greift ausschließlich, wenn ein Wort allein nicht
+     in die Zeile passt; normaler Text bleibt unangetastet. (Kein hyphens:auto — das trennte
+     zu viel.) */
+  overflow-wrap: break-word;
 }
 .prose p { margin: 0 0 1.1em; }
 .prose p:first-child:first-letter {
@@ -238,6 +266,28 @@ img { display: block; max-width: 100%; }
 }
 .prose ul, .prose ol { margin: 0 0 1.1em 1.3em; }
 .prose a { color: var(--accent); text-decoration: underline; }
+/* Fließtext-Link print-treu: fett-dunkel, ohne Unterstreichung (das Touch-Icon ist die
+   Affordance). Auf Hover dezent die Akzentfarbe als Feedback. */
+.prose a.text-link {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  /* Icon + Link-Text als Einheit umbrechen, damit das Touch-Icon nicht allein am
+     Zeilenende hängenbleibt (Link-Texte sind kurz → kein Overflow-Risiko). */
+  white-space: nowrap;
+}
+.prose a.text-link:hover { color: var(--accent); }
+.prose a.text-link:hover .tap-icon { color: var(--accent); }
+/* Touch-Icon vor Fließtext-Links (Heft-Konvention: „antippbar"). */
+.tap-icon {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  vertical-align: -0.16em;
+  margin-right: 0.28em;
+  color: var(--ink);
+}
 
 /* iOS-Data-Detector-Links (Datum/Telefon) neutralisieren — sollen nicht blau erscheinen */
 a[x-apple-data-detectors] {
@@ -250,7 +300,75 @@ a[x-apple-data-detectors] {
 
 /* ---------- Vollbild-Foto ---------- */
 .fullbleed { margin: 40px 0; }
-.fullbleed img { width: 100%; max-height: 92vh; object-fit: cover; }
+/* „Keiner": statisches Foto, variable Höhe (Standard) */
+.fullbleed-static { position: relative; }
+.fullbleed-static > img { display: block; width: 100%; max-height: 92vh; object-fit: cover; }
+
+/* Outfit-Overlay (Hero-Shot): fett-Label + Produkt, unten links, mit dunklem Verlauf für
+   Lesbarkeit. Liegt über dem Bild (auch bei Scroll-Effekten bleibt es ruhig stehen). */
+.gear-credits {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 60px 24px 22px;
+  color: #fff;
+  /* Abdunklung in der linken unteren Ecke (genau wo der Text steht), fadet zur Mitte aus —
+     nur sichtbar, wenn das Overlay aktiv ist (die .gear-credits werden nur dann gerendert). */
+  background: radial-gradient(
+    135% 105% at 0% 100%,
+    rgba(0, 0, 0, 0.94),
+    rgba(0, 0, 0, 0.7) 38%,
+    rgba(0, 0, 0, 0) 78%
+  );
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+}
+.gear-credits div { margin: 0; }
+.gear-credits dt { display: inline; margin: 0; font-weight: 800; }
+.gear-credits dd { display: inline; margin: 0 0 0 0.5em; font-weight: 400; }
+
+/* Scroll-Effekt-Modi: festes Sichtfenster + overflow:hidden. Das Bild bewegt sich INNERHALB
+   des Rahmens per transform (kein position:fixed → funktioniert trotz Carousel-Transform). */
+.fullbleed-frame {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  overflow: hidden;
+  /* iOS-Safari-Lehre (vgl. Specialized-Anzeige): das Bild ist durch transform/will-change ein
+     eigener GPU-Layer. Ohne eigenen Layer clippt iOS dessen overflow:hidden NICHT → das Bild
+     ragt über Caption + Rand hinaus (horizontaler Scroll). translateZ(0) gibt dem Rahmen einen
+     eigenen Layer, der das Kind GPU-seitig clippt. */
+  transform: translateZ(0);
+}
+.fullbleed-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  will-change: transform;
+}
+/* Parallax: leichte Überskalierung schafft Headroom, in dem das Bild gegenläufig wandert */
+.fullbleed-frame.fx-parallax img { transform: scale(1.14); }
+/* Zoom: Basiszustand 1.0, JS skaliert beim Scrollen auf bis 1.18 hoch */
+.fullbleed-frame.fx-scale img { transform: scale(1); }
+/* Ken Burns: langsamer Dauer-Zoom + -Pan, scroll-unabhängig (reine CSS-Animation) */
+.fullbleed-frame.fx-kenBurns img {
+  animation: kenburns 24s ease-in-out infinite alternate;
+}
+@keyframes kenburns {
+  from { transform: scale(1.08) translate3d(0, 0, 0); }
+  to   { transform: scale(1.2) translate3d(-2.5%, -3%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fullbleed-frame.fx-kenBurns img { animation: none; transform: scale(1.08); }
+}
 .caption {
   max-width: var(--maxWide);
   margin: 10px auto 0;
@@ -259,7 +377,10 @@ a[x-apple-data-detectors] {
   color: var(--muted);
 }
 
-/* ---------- Foto-Grid ---------- */
+/* ---------- Foto-Grid (gleichmäßig, Querformat-Kacheln + Versatz-Parallax) ----------
+   Alle Kacheln gleiches Seitenverhältnis (3:2), gleichmäßig angeordnet (altes Design).
+   Jede Kachel ist ein overflow:hidden-Frame; das Bild ist leicht überskaliert (scale 1.12)
+   und wird per JS beim Scrollen minimal verschoben (PhotoGrid in ArticleView). */
 .grid {
   max-width: var(--maxWide);
   margin: 40px auto;
@@ -267,11 +388,74 @@ a[x-apple-data-detectors] {
   display: grid;
   gap: 12px;
 }
-.grid.cols-1 { grid-template-columns: 1fr; }
-.grid.cols-2 { grid-template-columns: 1fr 1fr; }
-.grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-.grid img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 2px; }
+.grid-cell {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 2px;
+  /* die ganze Kachel schwebt (PhotoGrid setzt translate3d) — eigener Layer für saubere GPU-Anim */
+  will-change: transform;
+}
+.grid-cell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.grid--2_vertical { grid-template-columns: 1fr; }
+.grid--flow { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+/* 2er nach Heft-Vorbild: versetzt — kleineres Bild unten-links, größeres oben-rechts. */
+.grid--2_horizontal {
+  position: relative;
+  aspect-ratio: 5 / 2;
+}
+.grid--2_horizontal .grid-cell { position: absolute; }
+.grid--2_horizontal .grid-cell:nth-child(1) { left: 2%; top: 16%; width: 37%; }
+.grid--2_horizontal .grid-cell:nth-child(2) { left: 43%; top: 0; width: 54%; }
+
+/* 4er nach Heft-Vorbild: Diagonale — groß oben-links + groß unten-rechts, klein oben-rechts +
+   klein unten-links, versetzt mit Weißraum. Alle Querformat. */
+.grid--4_grid {
+  position: relative;
+  aspect-ratio: 8 / 5;
+}
+.grid--4_grid .grid-cell { position: absolute; }
+.grid--4_grid .grid-cell:nth-child(1) { left: 2%;  top: 4%;  width: 44%; } /* groß oben-links */
+.grid--4_grid .grid-cell:nth-child(2) { left: 62%; top: 0;   width: 30%; } /* klein oben-rechts */
+.grid--4_grid .grid-cell:nth-child(3) { left: 6%;  top: 60%; width: 30%; } /* klein unten-links */
+.grid--4_grid .grid-cell:nth-child(4) { left: 52%; top: 49%; width: 44%; } /* groß unten-rechts */
+
+/* Gespiegelte Variante (jedes zweite gleichartige Raster) → diagonaler Zickzack beim Stapeln.
+   Positionen horizontal getauscht (left' = 100 − left − width). */
+.grid--2_horizontal.grid--mirror .grid-cell:nth-child(1) { left: 61%; } /* klein nach rechts */
+.grid--2_horizontal.grid--mirror .grid-cell:nth-child(2) { left: 3%; }  /* groß nach links */
+
+.grid--3_horizontal.grid--mirror .grid-cell:nth-child(1) { left: 49%; } /* Leitbild nach rechts */
+.grid--3_horizontal.grid--mirror .grid-cell:nth-child(2) { left: 14%; }
+.grid--3_horizontal.grid--mirror .grid-cell:nth-child(3) { left: 8%; }
+
+.grid--4_grid.grid--mirror .grid-cell:nth-child(1) { left: 54%; }
+.grid--4_grid.grid--mirror .grid-cell:nth-child(2) { left: 8%; }
+.grid--4_grid.grid--mirror .grid-cell:nth-child(3) { left: 64%; }
+.grid--4_grid.grid--mirror .grid-cell:nth-child(4) { left: 4%; }
+
+/* 3er-Raster nach Heft-Vorbild: KEIN ausgerichtetes Raster, sondern versetzt mit Weißraum.
+   Großes Leitbild unten-links, kleines oben-rechts, mittleres darunter weiter rechts versetzt.
+   Absolute Platzierung in einem Container mit festem Seitenverhältnis; jede Kachel bleibt 3:2
+   (Querformat). Der Versatz-Parallax (PhotoGrid) lässt sie zusätzlich gegeneinander driften. */
+.grid--3_horizontal {
+  position: relative;
+  aspect-ratio: 11 / 5;
+}
+.grid--3_horizontal .grid-cell { position: absolute; aspect-ratio: 3 / 2; }
+/* großes Leitbild unten-links */
+.grid--3_horizontal .grid-cell:nth-child(1) { left: 3%; top: 14%; width: 48%; }
+/* kleines oben-rechts */
+.grid--3_horizontal .grid-cell:nth-child(2) { left: 56%; top: 0; width: 30%; }
+/* mittleres unten-rechts, weiter nach rechts versetzt */
+.grid--3_horizontal .grid-cell:nth-child(3) { left: 60%; top: 48%; width: 32%; }
 
 /* ---------- Pull-Quote ---------- */
 .pullquote {
@@ -801,10 +985,226 @@ a[x-apple-data-detectors] {
   width: 100vw;
   height: 100%;
   overflow-y: auto;
+  /* horizontal gehört dem Carousel-Transform, nie nativem Scrollen → hart abklemmen.
+     Verhindert, dass ein zu breites Element (z. B. ein langes Wort) den Panel-Scroll
+     seitlich aufmacht. Innere [data-hscroll]-Slideshows haben eigene Scroll-Container. */
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* vertikal scrollt der Browser, horizontal übernimmt das Carousel */
   touch-action: pan-y;
 }
+
+/* ---------- Desktop-Navigation (zentrale Floating-Pill) ----------
+   Eine Pill unten mittig: ‹ · Zähler+Übersicht · ›. Nur auf Geräten mit feinem Zeiger
+   (Maus/Trackpad) — am Phone navigiert das Wischen, da bleibt sie ausgeblendet. */
+.carousel-nav {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .carousel-nav {
+    display: flex;
+    position: absolute;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: stretch;
+    z-index: 40;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(10, 10, 12, 0.92);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  }
+  .carousel-nav-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.16s ease;
+  }
+  .carousel-nav-arrow:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+  .carousel-nav-arrow:disabled { opacity: 0.28; cursor: default; }
+  /* bold Chevron aus zwei Rändern (volle Kontrolle über die Strichstärke) */
+  .carousel-nav-arrow::before {
+    content: '';
+    display: block;
+    width: 11px;
+    height: 11px;
+    border: solid #fff;
+    border-width: 0 0 2.5px 2.5px;
+  }
+  .carousel-nav-arrow.prev::before { transform: rotate(45deg); margin-left: 3px; }
+  .carousel-nav-arrow.next::before { transform: rotate(-135deg); margin-right: 3px; }
+
+  .carousel-nav-center {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 20px;
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
+    background: transparent;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.16s ease;
+  }
+  .carousel-nav-center:hover { background: rgba(255, 255, 255, 0.1); }
+  .carousel-nav-count {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  /* kleines 2×2-Raster-Icon (Übersicht) aus currentColor */
+  .carousel-overview-icon {
+    width: 14px;
+    height: 14px;
+    background-image: linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(currentColor, currentColor);
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    background-position: 0 0, 9px 0, 0 9px, 9px 9px;
+  }
+}
+
+/* Übersicht-Overlay (Inhaltsverzeichnis als Layer — navigiert nicht weg) */
+.overview {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: rgba(10, 10, 12, 0.94);
+  backdrop-filter: saturate(140%) blur(14px);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  overflow-y: auto;
+  animation: overviewIn 0.22s ease;
+}
+@keyframes overviewIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.overview-inner {
+  max-width: var(--maxWide);
+  margin: 0 auto;
+  padding: 40px 24px 26px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.overview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.overview-head h2 {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.overview-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.overview-close:hover { background: rgba(255, 255, 255, 0.12); }
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+.overview-card {
+  display: block;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: #f4f4f6;
+}
+.overview-thumb {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1a1a1d;
+  border: 2px solid transparent;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.overview-card:hover .overview-thumb { transform: translateY(-3px); }
+.overview-card.is-current .overview-thumb { border-color: var(--accent, #fff); }
+.overview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.overview-thumb-empty { width: 100%; height: 100%; background: #1a1a1d; }
+.overview-ad-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 3px;
+}
+.overview-card-label {
+  margin-top: 10px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #b9b9bd);
+  font-weight: 600;
+}
+.overview-card-title {
+  margin-top: 3px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.overview-legal {
+  /* ans untere Ende des Overlays drücken (bündig am Bildschirmrand bei kurzer Liste;
+     scrollt bei langer Liste hinter dem Grid mit). min-Abstand übers padding-top. */
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.overview-legal a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+}
+.overview-legal a:hover { color: #fff; text-decoration: underline; }
+
+.kiosk-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 0 24px 60px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.kiosk-footer a { color: var(--muted); text-decoration: none; }
+.kiosk-footer a:hover { color: var(--accent); text-decoration: underline; }
 
 /* ---------- Kiosk / Inhaltsverzeichnis ---------- */
 .kiosk-hero {
@@ -891,7 +1291,44 @@ a[x-apple-data-detectors] {
 /* ---------- Mobile ---------- */
 @media (max-width: 720px) {
   body { font-size: 17px; }
-  .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; }
+  /* 3er-Raster am Phone: zurück auf Fluss-Grid — Leitbild oben über volle Breite, die zwei
+     kleinen als Paar darunter (absolute Platzierung aufheben). */
+  .grid--3_horizontal {
+    position: static;
+    aspect-ratio: auto;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .grid--3_horizontal .grid-cell {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    aspect-ratio: 3 / 2;
+  }
+  .grid--3_horizontal .grid-cell:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+  .grid--3_horizontal .grid-cell:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .grid--3_horizontal .grid-cell:nth-child(3) { grid-column: 2; grid-row: 2; }
+
+  /* 2er + 4er am Phone: absolute Platzierung aufheben → einfaches Raster (2er nebeneinander,
+     4er als 2×2), alle wieder 3:2. */
+  .grid--2_horizontal,
+  .grid--4_grid {
+    position: static;
+    aspect-ratio: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+  .grid--2_horizontal .grid-cell,
+  .grid--4_grid .grid-cell {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+  }
+  /* Masthead am Phone schlank: nur Zurück-Pfeil + Titel (Magazinname & Rubrik raus) */
+  .masthead .brand-name { display: none; }
+  .masthead .issue { display: none; }
+  .masthead-title { text-align: left; margin-left: 12px; }
   .swipe-hint {
     display: block;
     text-align: center;

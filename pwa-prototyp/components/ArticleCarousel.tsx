@@ -3,6 +3,8 @@
 import {useEffect, useRef, useState, useCallback} from 'react'
 import {ArticleView} from './ArticleView'
 import {AdView} from './AdView'
+import {AD_POSTERS} from './ads/registry'
+import {urlFor} from '@/lib/sanity'
 
 // Lücke zwischen den Panels (wie der weiße Rand zwischen Fotos in der iPhone-Fotos-App)
 const GAP = 24
@@ -21,6 +23,7 @@ export function ArticleCarousel({
   const [index, setIndex] = useState(startIndex)
   const [dragX, setDragX] = useState(0)
   const [animating, setAnimating] = useState(false)
+  const [overviewOpen, setOverviewOpen] = useState(false)
   const viewportRef = useRef<HTMLDivElement>(null)
 
   // Drag-Zustand in einem Ref (ändert sich pro Touch-Frame, soll kein Re-Render auslösen)
@@ -45,6 +48,26 @@ export function ArticleCarousel({
     },
     [articles],
   )
+
+  // Desktop-Navigation per Tastatur: ← / → blättern, Esc schließt die Übersicht.
+  // Wir mischen uns nicht ein, wenn die Anzeigen-Lightbox offen ist (die hat eigene Pfeil-Logik)
+  // oder der Fokus in einem Eingabefeld liegt.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && overviewOpen) {
+        setOverviewOpen(false)
+        return
+      }
+      if (overviewOpen) return
+      if (document.querySelector('.ad-view__lightbox')) return
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.key === 'ArrowRight') goTo(index + 1)
+      else if (e.key === 'ArrowLeft') goTo(index - 1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [index, overviewOpen, goTo])
 
   useEffect(() => {
     const vp = viewportRef.current
@@ -145,7 +168,7 @@ export function ArticleCarousel({
           return (
             <div className="carousel-panel" key={a.slug || i}>
               {a._panelType === 'ad' ? (
-                <AdView data={a} />
+                <AdView data={a} active={i === index} />
               ) : (
                 <ArticleView data={a} nav={{prev, next}} />
               )}
@@ -153,6 +176,104 @@ export function ArticleCarousel({
           )
         })}
       </div>
+
+      {/* Desktop-Navigation (per CSS nur auf Geräten mit feinem Zeiger sichtbar — am Phone
+          regelt das Wischen). Große Editorial-Pfeile links/rechts + Übersicht-Pill unten. */}
+      <div className="carousel-nav" role="group" aria-label="Beitrags-Navigation">
+        <button
+          type="button"
+          className="carousel-nav-arrow prev"
+          aria-label="Vorheriger Beitrag"
+          disabled={index === 0}
+          onClick={() => goTo(index - 1)}
+        />
+        <button
+          type="button"
+          className="carousel-nav-center"
+          aria-label="Übersicht öffnen"
+          onClick={() => setOverviewOpen(true)}
+        >
+          <span className="carousel-overview-icon" aria-hidden />
+          <span className="carousel-nav-count">
+            {index + 1} / {articles.length}
+          </span>
+        </button>
+        <button
+          type="button"
+          className="carousel-nav-arrow next"
+          aria-label="Nächster Beitrag"
+          disabled={index === articles.length - 1}
+          onClick={() => goTo(index + 1)}
+        />
+      </div>
+
+      {overviewOpen && (
+        <div
+          className="overview"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Beitragsübersicht"
+          onClick={() => setOverviewOpen(false)}
+        >
+          <div className="overview-inner" onClick={(e) => e.stopPropagation()}>
+            <div className="overview-head">
+              <h2>In dieser Ausgabe</h2>
+              <button
+                type="button"
+                className="overview-close"
+                aria-label="Schließen"
+                onClick={() => setOverviewOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overview-grid">
+              {articles.map((p, i) => {
+                const isAd = p._panelType === 'ad'
+                const title = isAd ? p.sponsor : p.title
+                const label = isAd ? 'Anzeige' : p.category
+                // Custom-Ads haben keine Sanity-`thumb` → Poster aus der Registry verwenden.
+                const thumbSrc = p.thumb
+                  ? urlFor(p.thumb).width(480).height(320).fit('crop').auto('format').url()
+                  : (isAd && p.componentId && AD_POSTERS[p.componentId]) || null
+                return (
+                  <button
+                    type="button"
+                    key={p.slug || i}
+                    className={`overview-card${i === index ? ' is-current' : ''}${
+                      isAd ? ' overview-card--ad' : ''
+                    }`}
+                    onClick={() => {
+                      setOverviewOpen(false)
+                      goTo(i)
+                    }}
+                  >
+                    <div className="overview-thumb">
+                      {thumbSrc ? (
+                        <img src={thumbSrc} alt="" loading="lazy" />
+                      ) : (
+                        <div className="overview-thumb-empty" />
+                      )}
+                      {isAd && <span className="overview-ad-badge">AD</span>}
+                    </div>
+                    {label && <div className="overview-card-label">{label}</div>}
+                    <div className="overview-card-title">{title}</div>
+                  </button>
+                )
+              })}
+            </div>
+            <footer className="overview-legal">
+              <a href="https://www.41publishing.com/impressum" target="_blank" rel="noopener noreferrer">
+                Impressum
+              </a>
+              <span aria-hidden>·</span>
+              <a href="https://www.41publishing.com/datenschutz" target="_blank" rel="noopener noreferrer">
+                Datenschutz
+              </a>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

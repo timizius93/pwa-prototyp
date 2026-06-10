@@ -9,13 +9,17 @@ import {InteractiveBike} from './InteractiveBike'
 import {ComparisonTable} from './ComparisonTable'
 import {TesterCarousel} from './TesterCarousel'
 
-const GRID_COLS: Record<string, number> = {
-  '2_horizontal': 2,
-  '2_vertical': 1,
-  '3_horizontal': 3,
-  '4_grid': 2,
-  '4_horizontal': 4,
-}
+// Touch-Icon vor Fließtext-Links (Heft-Konvention: schwarzer Kreis mit Hand → „antippbar").
+const TapIcon = () => (
+  <svg className="tap-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12" fill="currentColor" />
+    <path
+      transform="translate(4 4) scale(0.667)"
+      fill="#fff"
+      d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.39z"
+    />
+  </svg>
+)
 
 const ptComponents: PortableTextComponents = {
   block: {
@@ -28,7 +32,8 @@ const ptComponents: PortableTextComponents = {
     strong: ({children}) => <strong>{children}</strong>,
     em: ({children}) => <em>{children}</em>,
     link: ({children, value}) => (
-      <a href={value?.href} target="_blank" rel="noopener noreferrer">
+      <a className="text-link" href={value?.href} target="_blank" rel="noopener noreferrer">
+        <TapIcon />
         {children}
       </a>
     ),
@@ -39,7 +44,173 @@ function img(src: any, w: number) {
   return urlFor(src).width(w).fit('max').auto('format').url()
 }
 
-function Block({block, isLead}: {block: any; isLead: boolean}) {
+// Fullbleed-Foto mit optionalem Scroll-Effekt (Feld `scrollEffect` im Schema):
+//   none      – statisches Foto (wie früher)
+//   parallax  – Bild wandert beim Scrollen gegenläufig im Rahmen
+//   scale     – Bild zoomt heran, während es durch den Viewport scrollt
+//   kenBurns  – langsamer Dauer-Zoom + -Pan (reine CSS-Animation, scroll-unabhängig)
+//
+// Wichtig für die scroll-getriebenen Modi (parallax/scale): der Scroll-Container ist das
+// `.carousel-panel` (overflow-y:auto), NICHT window — und der Carousel-Track trägt ein
+// `transform`, das jedes `position:fixed`/`background-attachment:fixed`-Parallax bricht
+// (siehe AdView.tsx). Wir transformieren deshalb das Bild rein per `transform` INNERHALB
+// eines overflow:hidden-Rahmens; das ist transform-unabhängig und funktioniert im Panel.
+function FullbleedPhoto({
+  src,
+  caption,
+  effect = 'none',
+  gear,
+}: {
+  src: string
+  caption?: string
+  effect?: string
+  gear?: {label?: string; value?: string}[]
+}) {
+  const figRef = useRef<HTMLElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  // Outfit-Overlay (Hero-Shot): fett-Label + Produkt, unten links auf dem Foto.
+  const gearList = (gear || []).filter((g) => g?.label || g?.value)
+  const gearOverlay = gearList.length > 0 && (
+    <dl className="gear-credits">
+      {gearList.map((g, i) => (
+        <div key={i}>
+          {g.label && <dt>{g.label}</dt>}
+          {g.value && <dd>{g.value}</dd>}
+        </div>
+      ))}
+    </dl>
+  )
+
+  useEffect(() => {
+    // kenBurns läuft per CSS, none hat keinen Effekt → nur parallax/scale brauchen JS
+    if (effect !== 'parallax' && effect !== 'scale') return
+    const fig = figRef.current
+    const im = imgRef.current
+    const frame = im?.parentElement
+    if (!fig || !im || !frame) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+
+    const scroller: HTMLElement | Window = fig.closest('.carousel-panel') || window
+    let raf = 0
+
+    const update = () => {
+      raf = 0
+      const r = fig.getBoundingClientRect()
+      const vh = window.innerHeight
+      if (effect === 'parallax') {
+        // Headroom aus dem CSS-Overskalieren (scale 1.14), je zur Hälfte oben/unten
+        const maxShift = (im.getBoundingClientRect().height - frame.clientHeight) / 2
+        // -1 (Figur unten im Viewport) … +1 (oben) → Bild wandert gegenläufig
+        const p = (vh / 2 - (r.top + r.height / 2)) / (vh / 2 + r.height / 2)
+        const shift = Math.max(-1, Math.min(1, p)) * maxShift
+        im.style.transform = `translate3d(0, ${shift.toFixed(1)}px, 0) scale(1.14)`
+      } else {
+        // scale: 0 (Figur betritt unten) … 1 (verlässt oben) → Zoom 1.0 → 1.18
+        const p = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)))
+        im.style.transform = `scale(${(1 + p * 0.18).toFixed(3)})`
+      }
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+
+    update()
+    scroller.addEventListener('scroll', onScroll, {passive: true})
+    window.addEventListener('resize', onScroll, {passive: true})
+    return () => {
+      scroller.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [effect])
+
+  // „Keiner": statisches Foto wie früher (variable Höhe, kein fester Rahmen)
+  if (effect !== 'parallax' && effect !== 'scale' && effect !== 'kenBurns') {
+    return (
+      <figure className="fullbleed">
+        <div className="fullbleed-static">
+          <img src={src} alt={caption || ''} loading="lazy" />
+          {gearOverlay}
+        </div>
+        {caption && <figcaption className="caption">{caption}</figcaption>}
+      </figure>
+    )
+  }
+
+  return (
+    <figure className="fullbleed" ref={figRef}>
+      <div className={`fullbleed-frame fx-${effect}`}>
+        <img ref={imgRef} src={src} alt={caption || ''} loading="lazy" />
+        {gearOverlay}
+      </div>
+      {caption && <figcaption className="caption">{caption}</figcaption>}
+    </figure>
+  )
+}
+
+// Foto-Raster: konsistente Querformat-Kacheln, in den versetzten Heft-Layouts angeordnet.
+// „Floating images": beim Scrollen schwebt die GANZE Kachel (nicht das Bild im Rahmen) — jede
+// mit eigenem Tempo + eigener Richtung (signierte Faktoren) → die Boxen driften gegeneinander.
+// Bezugsgröße ist die Position des Rasters im Viewport; Scroll-Container ist das `.carousel-panel`.
+// Nur die versetzten Layouts schweben (sie haben Weißraum); enge Raster bleiben statisch.
+const GRID_FLOAT = [-0.6, 0.5, 0.32, -0.45] // Richtung + Tempo pro Kachel
+const FLOAT_AMP = 30 // px maximaler Schwebe-Versatz (dezent, damit Kacheln nicht überlappen)
+const FLOATING_LAYOUTS = ['2_horizontal', '3_horizontal', '4_grid']
+
+function PhotoGrid({images, layout, mirror}: {images: any[]; layout: string; mirror?: boolean}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!FLOATING_LAYOUTS.includes(layout)) return
+    const root = ref.current
+    if (!root) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    if (window.matchMedia?.('(max-width: 720px)').matches) return // Phone: statisches Raster
+    const cells = Array.from(root.querySelectorAll<HTMLElement>('.grid-cell'))
+    const scroller: HTMLElement | Window = root.closest('.carousel-panel') || window
+    let raf = 0
+
+    const update = () => {
+      raf = 0
+      const vh = window.innerHeight
+      const gr = root.getBoundingClientRect()
+      // -1 (Raster unter dem Viewport) … +1 (darüber), 0 = mittig
+      const p = Math.max(
+        -1.2,
+        Math.min(1.2, (vh / 2 - (gr.top + gr.height / 2)) / (vh / 2 + gr.height / 2)),
+      )
+      cells.forEach((cell, i) => {
+        const f = GRID_FLOAT[i % GRID_FLOAT.length]
+        cell.style.transform = `translate3d(0, ${(p * FLOAT_AMP * f).toFixed(1)}px, 0)`
+      })
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+
+    update()
+    scroller.addEventListener('scroll', onScroll, {passive: true})
+    window.addEventListener('resize', onScroll, {passive: true})
+    return () => {
+      scroller.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [images.length, layout])
+
+  return (
+    <div className={`grid grid--${layout}${mirror ? ' grid--mirror' : ''}`} ref={ref}>
+      {images.map((image: any, i: number) => (
+        <div className="grid-cell" key={image._key || i}>
+          <img src={img(image, 1400)} alt="" loading="lazy" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: boolean}) {
   switch (block._type) {
     case 'titlePage': {
       // Cover-Modus — ein durchgestaltetes Bild füllt den ersten Screen.
@@ -91,21 +262,16 @@ function Block({block, isLead}: {block: any; isLead: boolean}) {
       )
     case 'fullbleedPhoto':
       return (
-        <figure className="fullbleed">
-          <img src={img(block.image, 2200)} alt={block.caption || ''} loading="lazy" />
-          {block.caption && <figcaption className="caption">{block.caption}</figcaption>}
-        </figure>
+        <FullbleedPhoto
+          src={img(block.image, 2200)}
+          caption={block.caption}
+          effect={block.scrollEffect}
+          gear={block.gearList}
+        />
       )
     case 'photoGrid': {
-      const cols = GRID_COLS[block.layout] ?? 2
       const images = (block.images || []).filter((i: any) => i?.asset)
-      return (
-        <div className={`grid cols-${cols}`}>
-          {images.map((image: any, i: number) => (
-            <img key={image._key || i} src={img(image, 1200)} alt="" loading="lazy" />
-          ))}
-        </div>
-      )
+      return <PhotoGrid images={images} layout={block.layout || 'flow'} mirror={mirror} />
     }
     case 'pullQuote':
       return (
@@ -246,6 +412,18 @@ export function ArticleView({data, nav}: {data: any; nav: {prev: any; next: any}
   const firstTextKey = body.find((b: any) => b._type === 'articleText')?._key
   const hasTitlePage = body.some((b: any) => b._type === 'titlePage')
 
+  // Aufeinanderfolgende gleichartige Foto-Raster abwechselnd spiegeln → gestapelte 2er
+  // zickzacken diagonal statt zwei starre Spalten zu bilden. Zählung pro Layout-Typ.
+  const gridMirror: Record<string, boolean> = {}
+  const gridSeen: Record<string, number> = {}
+  body.forEach((b: any) => {
+    if (b._type === 'photoGrid') {
+      const l = b.layout || 'flow'
+      gridMirror[b._key] = (gridSeen[l] || 0) % 2 === 1
+      gridSeen[l] = (gridSeen[l] || 0) + 1
+    }
+  })
+
   // Cover-Hero-Modus: erster Block ist eine titlePage mit Cover-Artwork → der Masthead schwebt
   // initial transparent über dem Cover und wird solid, sobald das Cover aus dem Viewport scrollt.
   const firstBlock = body[0]
@@ -276,7 +454,10 @@ export function ArticleView({data, nav}: {data: any; nav: {prev: any; next: any}
   return (
     <div className={wrapperClass} ref={wrapperRef}>
       <div className="masthead">
-        <Link href="/" className="brand back">← {data.magazine?.name || 'E-MOUNTAINBIKE'}</Link>
+        <Link href="/" className="brand back" aria-label="Zurück zum Kiosk">
+          ← <span className="brand-name">{data.magazine?.name || 'E-MOUNTAINBIKE'}</span>
+        </Link>
+        {data.title && <span className="masthead-title">{data.title}</span>}
         <span className="issue">{data.category || ''}</span>
       </div>
 
@@ -290,7 +471,12 @@ export function ArticleView({data, nav}: {data: any; nav: {prev: any; next: any}
         )}
 
         {body.map((block: any) => (
-          <Block key={block._key} block={block} isLead={block._key === firstTextKey} />
+          <Block
+            key={block._key}
+            block={block}
+            isLead={block._key === firstTextKey}
+            mirror={gridMirror[block._key]}
+          />
         ))}
 
         {data.signature && <div className="signature">{data.signature}</div>}

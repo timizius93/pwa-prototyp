@@ -13,3 +13,9 @@ import SpecializedLevo4 from './SpecializedLevo4'
 export const AD_REGISTRY: Record<string, ComponentType> = {
   'specialized-levo-4': SpecializedLevo4,
 }
+
+// Vorschaubild (Poster) je Custom-Ad — Custom-Module haben keine Sanity-`images[]`, deshalb
+// braucht die Kiosk-/Übersicht-Kachel hier ein statisches Bild aus /public.
+export const AD_POSTERS: Record<string, string> = {
+  'specialized-levo-4': '/ads/specialized-levo-4/hero.jpg',
+}

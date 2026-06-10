@@ -43,17 +43,22 @@ type AdData = {
 
 const TOAST_SESSION_KEY = '41mag.adToastShown'
 
-export function AdView({data}: {data: AdData}) {
+export function AdView({data, active = true}: {data: AdData; active?: boolean}) {
   if (data.mode === 'custom') return <CustomAd componentId={data.componentId} sponsor={data.sponsor} />
-  return <StandardAd data={data} />
+  return <StandardAd data={data} active={active} />
 }
 
 // ─── Standard-Modus ────────────────────────────────────────────────────────────
-function StandardAd({data}: {data: AdData}) {
+function StandardAd({data, active}: {data: AdData; active: boolean}) {
   const [showToast, setShowToast] = useState(false)
   const [lightbox, setLightbox] = useState<number | null>(null)
 
+  // Wichtig: das Carousel mountet ALLE Panels gleichzeitig (auch off-screen). Der Toast darf
+  // deshalb NICHT beim Mount feuern — sonst erscheint er beim Öffnen jedes Artikels, dessen
+  // Ausgabe eine Standard-Anzeige enthält. Er feuert erst, wenn diese Anzeige das AKTIVE Panel
+  // im Carousel ist (`active`), und dann nur einmal pro Browser-Session.
   useEffect(() => {
+    if (!active) return
     if (typeof window === 'undefined') return
     if (sessionStorage.getItem(TOAST_SESSION_KEY)) return
     const hasZones = (data.images || []).some(
@@ -64,7 +69,7 @@ function StandardAd({data}: {data: AdData}) {
     setShowToast(true)
     const t = setTimeout(() => setShowToast(false), 3000)
     return () => clearTimeout(t)
-  }, [data.images])
+  }, [active, data.images])
 
   const images = data.images || []
   const gallery = data.gallery || []

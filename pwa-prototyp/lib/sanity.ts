@@ -27,7 +27,7 @@ const BODY = `body[]{
   _type, _key,
   _type=="titlePage" => { "eyebrow": eyebrow.de, "title": title.de, "subtitle": subtitle.de, "creditByline": creditByline.de, backgroundImage, foregroundImage, coverArtwork, coverArtworkMobile },
   _type=="articleText" => { "content": content.de },
-  _type=="fullbleedPhoto" => { image, "caption": caption.de, scrollEffect },
+  _type=="fullbleedPhoto" => { image, "caption": caption.de, scrollEffect, "gearList": gearList[]{ "label": label.de, value } },
   _type=="photoGrid" => { layout, images },
   _type=="pullQuote" => { "text": text.de, attribution },
   _type=="specLine" => { bikeName, motor, travelFront_mm, travelRear_mm, weight_kg, weight_size, price_eur, manufacturerLink },
@@ -82,6 +82,7 @@ const KIOSK_QUERY = `*[_type=="issue" && _id==$issueId][0]{
       "slug": "ad-" + _id,
       "sponsor": sponsor,
       "mode": mode,
+      "componentId": componentId,
       "thumb": images[0].image
     },
     _type in ["articleEditorial","article"] => {
@@ -130,6 +131,7 @@ const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
       "sponsor": sponsor,
       "mode": mode,
       "componentId": componentId,
+      "thumb": images[0].image,
       "magazine": magazine->{name, primaryColor},
       "issue": issue->{number, "title": title.de},
       "images": images[]{
@@ -149,6 +151,7 @@ const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
       "category": coalesce(category, select(_type=="articleEditorial" => "Editorial")),
       "author": author->name,
       "signature": signature.de,
+      "thumb": coalesce(heroImage, body[_type=="fullbleedPhoto"][0].image, body[_type=="titlePage"][0].coverArtwork, body[_type=="titlePage"][0].backgroundImage),
       "magazine": magazine->{name, primaryColor},
       "issue": issue->{number, "title": title.de},
       ${BODY}

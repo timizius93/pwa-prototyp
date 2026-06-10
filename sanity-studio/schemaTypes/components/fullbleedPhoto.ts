@@ -21,6 +21,30 @@ export const fullbleedPhoto = defineType({
       to: [{type: 'person'}],
     }),
     defineField({
+      name: 'gearList',
+      title: 'Outfit-Overlay (Hero-Shot)',
+      description:
+        'Optional: Ausrüstung des Fahrers, wird unten links auf dem Foto eingeblendet (z. B. HELM · Smith Session).',
+      type: 'array',
+      of: [
+        defineField({
+          name: 'gearItem',
+          title: 'Teil',
+          type: 'object',
+          fields: [
+            defineField({name: 'label', title: 'Label (z. B. HELM)', type: 'localeString'}),
+            defineField({name: 'value', title: 'Produkt (z. B. Smith Session)', type: 'string'}),
+          ],
+          preview: {
+            select: {label: 'label.de', value: 'value'},
+            prepare({label, value}) {
+              return {title: [label, value].filter(Boolean).join(' · ')}
+            },
+          },
+        }),
+      ],
+    }),
+    defineField({
       name: 'scrollEffect',
       title: 'Scroll-Effekt',
       type: 'string',

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import {urlFor} from '@/lib/sanity'
+import {AD_POSTERS} from './ads/registry'
 
 function thumb(src: any) {
   return urlFor(src).width(900).height(600).fit('crop').auto('format').url()
@@ -24,6 +25,8 @@ export function Kiosk({data}: {data: any}) {
               <div className="card-thumb">
                 {p.thumb?.asset ? (
                   <img src={thumb(p.thumb)} alt="" />
+                ) : p.componentId && AD_POSTERS[p.componentId] ? (
+                  <img src={AD_POSTERS[p.componentId]} alt="" />
                 ) : (
                   <div className="card-thumb placeholder" />
                 )}
@@ -51,6 +54,15 @@ export function Kiosk({data}: {data: any}) {
           ),
         )}
       </div>
+      <footer className="kiosk-footer">
+        <a href="https://www.41publishing.com/impressum" target="_blank" rel="noopener noreferrer">
+          Impressum
+        </a>
+        <span aria-hidden>·</span>
+        <a href="https://www.41publishing.com/datenschutz" target="_blank" rel="noopener noreferrer">
+          Datenschutz
+        </a>
+      </footer>
     </>
   )
 }

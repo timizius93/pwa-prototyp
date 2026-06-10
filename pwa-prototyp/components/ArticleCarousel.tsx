@@ -37,6 +37,20 @@ export function ArticleCarousel({
     width: 0,
   })
 
+  // Teilen über die native System-Sheet (iOS/Android); Desktop-Fallback: Link kopieren.
+  const onShare = useCallback(async () => {
+    const a = articles[index]
+    if (!a || typeof window === 'undefined') return
+    const url = `${window.location.origin}/artikel/${a.slug || ''}`
+    const title = a._panelType === 'ad' ? `Anzeige · ${a.sponsor || ''}`.trim() : a.title
+    try {
+      if (navigator.share) await navigator.share({title, url})
+      else await navigator.clipboard?.writeText(url)
+    } catch {
+      /* User hat das Teilen abgebrochen — kein Fehler */
+    }
+  }, [articles, index])
+
   const goTo = useCallback(
     (i: number) => {
       const clamped = Math.max(0, Math.min(articles.length - 1, i))
@@ -206,6 +220,36 @@ export function ArticleCarousel({
           onClick={() => goTo(index + 1)}
         />
       </div>
+
+      {/* Touch-Navigation: schwebende Bottom-Bar im Stil moderner Apps (per CSS nur auf
+          Touch-Geräten sichtbar — auf Desktop regelt die Pill oben). Kiosk · Übersicht ·
+          Position · Teilen. */}
+      <nav className="carousel-tabbar" aria-label="Navigation">
+        <a className="tabbar-btn" href="/" aria-label="Zum Kiosk">
+          <svg className="tabbar-ico" viewBox="0 0 24 24" aria-hidden>
+            <path d="M3 11.2 12 4l9 7.2" />
+            <path d="M5.5 9.8V19a1 1 0 0 0 1 1H10v-5h4v5h3.5a1 1 0 0 0 1-1V9.8" />
+          </svg>
+        </a>
+        <button type="button" className="tabbar-btn" aria-label="Übersicht öffnen" onClick={() => setOverviewOpen(true)}>
+          <svg className="tabbar-ico" viewBox="0 0 24 24" aria-hidden>
+            <rect x="4" y="4" width="6.5" height="6.5" rx="1.4" />
+            <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.4" />
+            <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.4" />
+            <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.4" />
+          </svg>
+        </button>
+        <button type="button" className="tabbar-btn tabbar-btn--pos" aria-label="Beitragsübersicht" onClick={() => setOverviewOpen(true)}>
+          <span className="tabbar-count">{index + 1} / {articles.length}</span>
+        </button>
+        <button type="button" className="tabbar-btn" aria-label="Teilen" onClick={onShare}>
+          <svg className="tabbar-ico" viewBox="0 0 24 24" aria-hidden>
+            <path d="M12 3.5v11" />
+            <path d="M8.5 7 12 3.5 15.5 7" />
+            <path d="M7 11H5.5a1 1 0 0 0-1 1v7.5a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V12a1 1 0 0 0-1-1H17" />
+          </svg>
+        </button>
+      </nav>
 
       {overviewOpen && (
         <div

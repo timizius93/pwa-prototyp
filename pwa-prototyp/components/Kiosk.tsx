@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {urlFor} from '@/lib/sanity'
 import {AD_POSTERS} from './ads/registry'
+import {OfflineSaver} from './OfflineSaver'
 
 function thumb(src: any) {
   return urlFor(src).width(900).height(600).fit('crop').auto('format').url()
@@ -55,6 +56,10 @@ export function Kiosk({data}: {data: any}) {
           <p className="kiosk-sub">{articleCount} Artikel in dieser Ausgabe</p>
         </header>
       )}
+
+      <div className="kiosk-offline">
+        <OfflineSaver slugs={panels.map((p: any) => p.slug)} />
+      </div>
 
       <div className="kiosk-grid">
         {panels.map((p: any) =>

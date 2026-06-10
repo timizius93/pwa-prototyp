@@ -1074,6 +1074,67 @@ a[x-apple-data-detectors] {
   }
 }
 
+/* ---------- Touch-Navigation: schwebende Bottom-Bar (moderne-App-Optik) ----------
+   Abgesetzt vom Rand, abgerundet, blurred. Sichtbar auf Touch-Geräten; auf Desktop
+   (feiner Zeiger) zeigt stattdessen die Pill oben (siehe .carousel-nav). */
+.carousel-tabbar {
+  position: absolute;
+  z-index: 40;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(12, 12, 14, 0.78);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.34);
+}
+/* Nur Icons, runde Tap-Flächen — die ganze Bar ist eine große Pille. */
+.tabbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 999px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.tabbar-btn:active { background: rgba(255, 255, 255, 0.14); }
+.tabbar-ico {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* das Raster-Icon (Übersicht) ist gefüllt statt gestrichelt */
+.tabbar-btn svg rect { fill: currentColor; stroke: none; }
+/* Positions-Chip: kein Icon, sondern der Zähler — eigene Breite. */
+.tabbar-btn--pos { width: auto; min-width: 46px; padding: 0 12px; color: #fff; }
+.tabbar-count {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media (hover: hover) and (pointer: fine) {
+  .carousel-tabbar { display: none; }
+}
+
 /* Übersicht-Overlay (Inhaltsverzeichnis als Layer — navigiert nicht weg) */
 .overview {
   position: absolute;
@@ -1321,6 +1382,32 @@ a[x-apple-data-detectors] {
 }
 .kiosk-hero .kiosk-sub { margin-top: 12px; color: #b9b9bd; font-size: 0.95rem; }
 
+/* „Ausgabe offline speichern" (Mess-Sprint-Spike) */
+.kiosk-offline {
+  max-width: var(--maxWide);
+  margin: 0 auto;
+  padding: 32px 24px 0;
+  display: flex;
+  justify-content: center;
+}
+.offline-save {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8ea;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.offline-save:hover { background: rgba(255, 255, 255, 0.12); }
+.offline-save.saving { opacity: 0.7; cursor: progress; }
+.offline-save.done { border-color: rgba(80, 200, 160, 0.55); color: #8fe3c6; }
+.offline-save.error { border-color: rgba(230, 120, 120, 0.6); color: #f0a8a8; }
+
 .kiosk-grid {
   max-width: var(--maxWide);
   margin: 0 auto;
@@ -1384,44 +1471,44 @@ a[x-apple-data-detectors] {
 /* ---------- Mobile ---------- */
 @media (max-width: 720px) {
   body { font-size: 17px; }
-  /* 3er-Raster am Phone: zurück auf Fluss-Grid — Leitbild oben über volle Breite, die zwei
-     kleinen als Paar darunter (absolute Platzierung aufheben). */
-  .grid--3_horizontal {
-    position: static;
-    aspect-ratio: auto;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
+  /* Foto-Grids am Phone: KEINE Mini-Kacheln nebeneinander mehr (die waren viel zu klein).
+     Jedes Foto bekommt die volle Bildschirmbreite (randlos, bricht aus der Textspalte aus)
+     und wird gestapelt — große, wertige Bilder. (Parallax ist am Phone ohnehin aus.) */
+  .grid {
+    max-width: none;
+    margin: 28px 0;
+    padding: 0;
+    gap: 6px;
   }
-  .grid--3_horizontal .grid-cell {
-    position: relative;
-    left: auto;
-    top: auto;
-    width: auto;
-    aspect-ratio: 3 / 2;
-  }
-  .grid--3_horizontal .grid-cell:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
-  .grid--3_horizontal .grid-cell:nth-child(2) { grid-column: 1; grid-row: 2; }
-  .grid--3_horizontal .grid-cell:nth-child(3) { grid-column: 2; grid-row: 2; }
-
-  /* 2er + 4er am Phone: absolute Platzierung aufheben → einfaches Raster (2er nebeneinander,
-     4er als 2×2), alle wieder 3:2. */
+  .grid--2_vertical,
   .grid--2_horizontal,
-  .grid--4_grid {
+  .grid--3_horizontal,
+  .grid--4_grid,
+  .grid--flow {
     position: static;
     aspect-ratio: auto;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
   }
+  /* !important schlägt die hochspezifischen :nth-child-Positionen des Print-Layouts
+     (z. B. .grid--2_horizontal .grid-cell:nth-child(1){width:37%}) — Media-Queries
+     erhöhen die Spezifität nicht, daher ist das hier nötig. */
   .grid--2_horizontal .grid-cell,
-  .grid--4_grid .grid-cell {
-    position: relative;
-    left: auto;
-    top: auto;
-    width: auto;
+  .grid--3_horizontal .grid-cell,
+  .grid--4_grid .grid-cell,
+  .grid--flow .grid-cell {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    aspect-ratio: 3 / 2;
+    border-radius: 0;
   }
-  /* Masthead am Phone schlank: nur Zurück-Pfeil + Titel (Magazinname & Rubrik raus) */
-  .masthead .brand-name { display: none; }
+  /* Masthead am Phone schlank: nur der Titel. Zurück-Pfeil entfällt — der „Kiosk"-Button
+     in der Bottom-Bar übernimmt den Weg zurück. (Magazinname & Rubrik ebenfalls raus.) */
+  .masthead .brand.back { display: none; }
   .masthead .issue { display: none; }
-  .masthead-title { text-align: left; margin-left: 12px; }
+  .masthead-title { text-align: left; margin-left: 0; }
   .swipe-hint {
     display: block;
     text-align: center;

@@ -27,6 +27,10 @@ import {verdictPanel} from './components/verdictPanel'
 import {hotspotImage} from './components/hotspotImage'
 import {geometryOverlay} from './components/geometryOverlay'
 import {interactiveBike} from './components/interactiveBike'
+// Vergleichstest-Bausteine
+import {comparisonTable} from './components/comparisonTable'
+import {awardBox} from './components/awardBox'
+import {testerCarousel} from './components/testerCarousel'
 // Werbung
 import {adImageWithZones} from './components/adImageWithZones'
 
@@ -56,5 +60,8 @@ export const schemaTypes = [
   hotspotImage,
   geometryOverlay,
   interactiveBike,
+  comparisonTable,
+  awardBox,
+  testerCarousel,
   adImageWithZones,
 ]

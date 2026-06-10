@@ -50,6 +50,17 @@ const BODY = `body[]{
   },
   _type=="tuningTip" => { "tip": tip.de },
   _type=="verdictPanel" => { "headline": headline.de, "verdict": verdict.de, "tops": tops[].de, "flops": flops[].de, backgroundImage, overlayStyle },
+  _type=="comparisonTable" => {
+    "title": title.de,
+    "columns": columns[]{ "label": label.de, unit, numeric },
+    "rows": rows[]{ "cells": cells[].de },
+    "notes": notes.de
+  },
+  _type=="awardBox" => { awardType, "customLabel": customLabel.de, winnerName, winnerImage, badge, "verdict": verdict.de },
+  _type=="testerCarousel" => {
+    "title": title.de,
+    "testers": testers[]->{ _id, name, "role": roleDefault, "bio": bio.de, portrait }
+  },
   _type=="ctaBlock" => { "headline": headline.de, "buttonLabel": buttonLabel.de, targetUrl }
 }`
 

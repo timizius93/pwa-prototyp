@@ -1414,3 +1414,428 @@ a[x-apple-data-detectors] {
   border-radius: 6px;
   pointer-events: none;
 }
+
+/* ── Vergleichstabelle (comparisonTable) ──────────────────────────────
+   Killer-Feature: Spalten sind sortierbar (im Print unmöglich). Desktop = echte
+   Tabelle mit klickbaren Spaltenköpfen; Phone (≤720px) = jede Zeile als Karte
+   plus ein Sortier-Dropdown. Beide teilen denselben Sortier-State. */
+.comparison {
+  /* Vergleichstabellen dürfen breiter sein als Fließtext/Bilder (--maxWide 1200) —
+     bei vielen Spalten würde die letzte sonst aus dem Scroll-Container laufen. */
+  max-width: 1500px;
+  margin: 48px auto;
+  padding: 0 24px;
+}
+.comparison-title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  margin: 0 0 18px;
+}
+
+.comparison-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.comparison-table th,
+.comparison-table td {
+  padding: 10px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  white-space: normal; /* lange Textwerte (z. B. „Bosch-Werk Miskolc, Ungarn") dürfen umbrechen */
+}
+/* Produktname (erste Spalte) + Zahlen bleiben einzeilig */
+.comparison-table th:first-child,
+.comparison-table td:first-child,
+.comparison-table th.num,
+.comparison-table td.num {
+  white-space: nowrap;
+}
+.comparison-table th.num,
+.comparison-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.comparison-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  vertical-align: bottom;
+}
+.comparison-table th button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+.comparison-table th.num button {
+  flex-direction: row-reverse;
+}
+.comparison-table th .unit {
+  color: var(--muted);
+  font-weight: 400;
+  font-style: normal;
+  font-size: 0.85em;
+}
+.comparison-table th .arrow {
+  color: var(--line);
+  font-size: 0.78em;
+}
+.comparison-table th.sorted .arrow {
+  color: var(--accent);
+}
+.comparison-table th button:hover {
+  color: var(--accent);
+}
+.comparison-table tbody tr:hover {
+  background: #f6f9fb;
+}
+.comparison-table td:first-child strong {
+  font-weight: 700;
+}
+
+.comparison-sort {
+  display: none;
+}
+.comparison-cards {
+  display: none;
+}
+
+.comparison-notes {
+  margin: 16px auto 0;
+  max-width: var(--maxText);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+@media (max-width: 720px) {
+  .comparison-scroll {
+    display: none;
+  }
+  .comparison-cards {
+    display: block;
+  }
+  .comparison-sort {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .comparison-sort label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .comparison-sort select {
+    font-size: 1rem;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .comparison-dir {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 41px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--paper);
+    color: var(--accent);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .comparison-dir:disabled {
+    color: var(--line);
+    cursor: default;
+  }
+  .comparison-card {
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    padding: 15px 17px;
+    margin-bottom: 13px;
+  }
+  .comparison-card-title {
+    font-weight: 700;
+    font-size: 1.08rem;
+    line-height: 1.25;
+    margin-bottom: 11px;
+  }
+  .comparison-card dl {
+    margin: 0;
+  }
+  .comparison-card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 6px 0;
+    border-top: 1px solid var(--line);
+  }
+  .comparison-card-row dt {
+    color: var(--muted);
+  }
+  .comparison-card-row dt .unit {
+    font-style: normal;
+  }
+  .comparison-card-row dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── Auszeichnung (awardBox) ──────────────────────────────────────────
+   Redaktionelles, zentriert gestapeltes Heft-Layout: gesperrtes Label + Trennstrich,
+   Sieger-Name groß (Marke fett · Modell leicht), großes Foto, Siegel mittig drunter,
+   Verdict zentriert. Award-Akzent (Label + Strich) ist die Magazin-Award-Farbe. */
+.award {
+  --aw: #1f9e8c; /* E-MOUNTAINBIKE-Award-Akzent (Teal-Grün) */
+  max-width: 880px;
+  margin: 64px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.award + .award {
+  margin-top: 72px;
+}
+
+.award-kicker {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--aw);
+}
+.award-kicker::after {
+  content: '';
+  display: block;
+  width: 30px;
+  height: 2px;
+  margin: 12px auto 0;
+  background: var(--aw);
+}
+.award-winner {
+  margin: 16px 0 26px;
+  font-size: clamp(1.6rem, 4.2vw, 2.5rem);
+  font-weight: 300;
+  line-height: 1.08;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.award-winner .brand {
+  font-weight: 800;
+}
+
+.award-media {
+  position: relative;
+  margin: 0;
+}
+.award-media > img:not(.award-badge) {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+/* Siegel mittig unter dem Foto, leicht überlappend */
+.award-badge {
+  display: block;
+  position: relative;
+  width: clamp(96px, 13vw, 148px);
+  height: auto;
+  margin: -38px auto 0;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.3));
+}
+
+.award-verdict {
+  max-width: 660px;
+  margin: 24px auto 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #2a2a2e;
+}
+
+@media (max-width: 720px) {
+  .award {
+    margin: 40px auto;
+    padding: 0 18px;
+  }
+  .award + .award {
+    margin-top: 48px;
+  }
+}
+
+/* ── Tester-Porträts (testerCarousel) ─────────────────────────────────
+   Slideshow: eine große, luftige Slide pro Ansicht (Foto + Bio nebeneinander),
+   Blättern per Pfeil / Dots / Touch-Wisch (scroll-snap). */
+.testers {
+  max-width: var(--maxWide);
+  margin: 56px auto;
+  padding: 0 24px;
+}
+.testers-title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  margin: 0 0 22px;
+}
+.testers-stage {
+  position: relative;
+}
+.testers-track {
+  display: flex;
+  gap: 28px; /* Lücke zwischen den Slides (wie die Fotos-App), sichtbar beim Wischen */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Kein natives scroll-snap — das Einrasten macht TesterCarousel.tsx weich per Animation
+     (native „mandatory" schnappte hart zurück). */
+}
+.testers-track::-webkit-scrollbar {
+  display: none;
+}
+.tester-slide {
+  flex: 0 0 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding: 4px;
+}
+.tester-slide > img {
+  flex: 0 0 44%;
+  aspect-ratio: 4 / 5;
+  max-height: 460px;
+  object-fit: cover;
+  border-radius: 18px;
+  background: #0c0c0d;
+}
+.tester-slide figcaption {
+  flex: 1;
+  padding-right: 24px;
+}
+.tester-role {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.tester-name {
+  margin: 8px 0 0;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.tester-bio {
+  margin: 18px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #2a2a2e;
+  max-width: 48ch;
+}
+
+/* Pfeil-Navigation */
+.testers-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: opacity 0.15s, background 0.15s;
+}
+.testers-nav.prev {
+  left: -6px;
+}
+.testers-nav.next {
+  right: -6px;
+}
+.testers-nav:hover {
+  background: #fff;
+  color: var(--accent);
+}
+.testers-nav:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Dots */
+.testers-dots {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 22px;
+}
+.testers-dots button {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--line);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.testers-dots button.on {
+  background: var(--accent);
+  transform: scale(1.25);
+}
+
+@media (max-width: 720px) {
+  .testers {
+    padding: 0 18px;
+  }
+  .tester-slide {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    padding: 0;
+  }
+  .tester-slide > img {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-height: none;
+  }
+  .tester-slide figcaption {
+    padding-right: 0;
+  }
+  .tester-bio {
+    font-size: 1rem;
+    max-width: none;
+  }
+  /* Auf dem Phone per Wisch + Dots blättern — Pfeile ausblenden */
+  .testers-nav {
+    display: none;
+  }
+}

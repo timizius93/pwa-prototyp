@@ -6,6 +6,8 @@ import {urlFor} from '@/lib/sanity'
 import {HotspotImage} from './HotspotImage'
 import {GeometryOverlay} from './GeometryOverlay'
 import {InteractiveBike} from './InteractiveBike'
+import {ComparisonTable} from './ComparisonTable'
+import {TesterCarousel} from './TesterCarousel'
 
 const GRID_COLS: Record<string, number> = {
   '2_horizontal': 2,
@@ -145,6 +147,43 @@ function Block({block, isLead}: {block: any; isLead: boolean}) {
       return <GeometryOverlay block={block} />
     case 'interactiveBike':
       return <InteractiveBike block={block} />
+    case 'comparisonTable':
+      return <ComparisonTable block={block} />
+    case 'testerCarousel':
+      return <TesterCarousel block={block} />
+    case 'awardBox': {
+      const AWARDS: Record<string, string> = {
+        best_in_test: 'Testsieger',
+        best_buy: 'Kauftipp',
+        editors_choice: 'Editors’ Choice',
+      }
+      const label = AWARDS[block.awardType] || block.customLabel || 'Auszeichnung'
+      // Sieger-Name: erstes Wort (Marke) fett, Rest leicht — wie im Heft
+      const name: string = block.winnerName || ''
+      const sp = name.indexOf(' ')
+      const brand = sp > 0 ? name.slice(0, sp) : name
+      const rest = sp > 0 ? name.slice(sp + 1) : ''
+      return (
+        <section className="award">
+          <div className="award-kicker">{label}</div>
+          {name && (
+            <h3 className="award-winner">
+              <span className="brand">{brand}</span>
+              {rest && <> {rest}</>}
+            </h3>
+          )}
+          {block.winnerImage?.asset && (
+            <figure className="award-media">
+              <img src={img(block.winnerImage, 1600)} alt={name} loading="lazy" />
+              {block.badge?.asset && (
+                <img className="award-badge" src={img(block.badge, 480)} alt="" aria-hidden="true" />
+              )}
+            </figure>
+          )}
+          {block.verdict && <p className="award-verdict">{block.verdict}</p>}
+        </section>
+      )
+    }
     case 'tuningTip':
       return (
         <aside className="tuningtip">

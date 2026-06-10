@@ -26,6 +26,7 @@ export function ArticleCarousel({
   // Drag-Zustand in einem Ref (ändert sich pro Touch-Frame, soll kein Re-Render auslösen)
   const drag = useRef({
     active: false,
+    ignore: false,
     startX: 0,
     startY: 0,
     axis: null as null | 'x' | 'y',
@@ -52,8 +53,13 @@ export function ArticleCarousel({
     function onStart(e: TouchEvent) {
       if (e.touches.length !== 1) return
       const t = e.touches[0]
+      // Startet der Finger auf einem horizontal scrollbaren Element (z. B. der Tester-Slideshow),
+      // gehört die Wisch-Geste IHM — wir mischen uns nicht ein (kein Artikel-Wechsel, kein
+      // preventDefault → natives Scrollen des inneren Elements bleibt erhalten).
+      const onHScroll = !!(e.target as Element)?.closest?.('[data-hscroll]')
       drag.current = {
         active: true,
+        ignore: onHScroll,
         startX: t.clientX,
         startY: t.clientY,
         axis: null,
@@ -65,7 +71,7 @@ export function ArticleCarousel({
 
     function onMove(e: TouchEvent) {
       const d = drag.current
-      if (!d.active) return
+      if (!d.active || d.ignore) return
       const t = e.touches[0]
       const dx = t.clientX - d.startX
       const dy = t.clientY - d.startY
@@ -88,6 +94,10 @@ export function ArticleCarousel({
       const d = drag.current
       if (!d.active) return
       d.active = false
+      if (d.ignore) {
+        d.ignore = false
+        return
+      }
       if (d.axis !== 'x') return
       const threshold = (d.width || window.innerWidth) * 0.22
       setAnimating(true)

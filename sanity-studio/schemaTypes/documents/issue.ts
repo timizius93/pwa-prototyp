@@ -20,14 +20,23 @@ export const issue = defineType({
       validation: (r) => r.required(),
     }),
     defineField({name: 'title', title: 'Ausgaben-Titel', type: 'localeString'}),
+    defineField({
+      name: 'coverImage',
+      title: 'Cover-Hintergrundfoto',
+      description:
+        'Nur das Hintergrundfoto (OHNE eingebrannten Text/Logo) — Logo, Ausgabe und Titel legt der Kiosk im Code darüber. Der Hotspot steuert den Bildausschnitt.',
+      type: 'image',
+      options: {hotspot: true},
+    }),
     defineField({name: 'publishDate', title: 'Erscheinungsdatum', type: 'date'}),
   ],
   preview: {
-    select: {number: 'number', mag: 'magazine.name', title: 'title.de'},
-    prepare({number, mag, title}) {
+    select: {number: 'number', mag: 'magazine.name', title: 'title.de', media: 'coverImage'},
+    prepare({number, mag, title, media}) {
       return {
         title: `${mag ?? 'Magazin'} #${number ?? '?'}`,
         subtitle: title,
+        media,
       }
     },
   },

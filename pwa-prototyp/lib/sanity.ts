@@ -70,7 +70,9 @@ const BODY = `body[]{
 const KIOSK_QUERY = `*[_type=="issue" && _id==$issueId][0]{
   number,
   "title": title.de,
-  "magazine": magazine->{name, primaryColor},
+  coverImage,
+  publishDate,
+  "magazine": magazine->{name, primaryColor, logo},
   "panels": *[
     (_type in ["articleEditorial","article"] || _type=="advertisement")
     && issue._ref == ^._id

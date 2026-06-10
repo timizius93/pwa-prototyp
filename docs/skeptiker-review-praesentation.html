@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skeptiker-Review — Magazin-PWA Risiko-Pilot</title>
+<style>
+  :root{
+    --bg:#0c0c0d; --panel:#151517; --ink:#f2f2f3; --muted:#9a9aa2; --line:#2a2a2e;
+    --red:#ff5a5a; --amber:#ffb84d; --green:#3ecf8e; --teal:#1f9e8c; --accent:#7aa7ff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; overflow:hidden}
+  .slide{display:none; height:100vh; padding:5vh 7vw; flex-direction:column; justify-content:center; overflow-y:auto}
+  .slide.active{display:flex}
+  .eyebrow{font-size:13px; letter-spacing:.25em; text-transform:uppercase; color:var(--muted); margin-bottom:18px}
+  h1{font-size:clamp(34px,5vw,58px); line-height:1.08; font-weight:800; margin-bottom:22px}
+  h2{font-size:clamp(26px,3.4vw,40px); line-height:1.12; font-weight:800; margin-bottom:20px}
+  h2 .num{color:var(--red); margin-right:.35em}
+  p.lead{font-size:clamp(16px,1.6vw,21px); color:var(--muted); line-height:1.55; max-width:60ch}
+  strong{color:var(--ink)}
+  .kicker-red{color:var(--red)} .kicker-green{color:var(--green)} .kicker-amber{color:var(--amber)}
+  ul.points{list-style:none; margin-top:18px; font-size:clamp(15px,1.45vw,19px); line-height:1.5}
+  ul.points li{padding:10px 0 10px 30px; position:relative; border-bottom:1px solid var(--line); color:#d9d9de}
+  ul.points li:last-child{border-bottom:none}
+  ul.points li::before{content:"—"; position:absolute; left:0; color:var(--red)}
+  ul.points.good li::before{content:"✓"; color:var(--green)}
+  table{width:100%; border-collapse:collapse; margin-top:16px; font-size:clamp(13px,1.25vw,16px)}
+  th{Text-align:left; text-transform:uppercase; font-size:.78em; letter-spacing:.08em; color:var(--muted); padding:8px 12px; border-bottom:2px solid var(--line); text-align:left}
+  td{padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.4; color:#d9d9de}
+  td:first-child{white-space:nowrap}
+  .ok{color:var(--green); font-weight:700} .warn{color:var(--amber); font-weight:700} .bad{color:var(--red); font-weight:700}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:34px; margin-top:10px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-top:16px}
+  .card h3{font-size:clamp(15px,1.5vw,19px); margin-bottom:10px}
+  .card p, .card li{font-size:clamp(13.5px,1.3vw,16px); color:var(--muted); line-height:1.5}
+  .big{font-size:clamp(40px,6vw,84px); font-weight:800; line-height:1}
+  .footer{position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:14px 7vw; font-size:12px; color:var(--muted); border-top:1px solid var(--line); background:rgba(12,12,13,.92); backdrop-filter:blur(6px)}
+  .progress{position:fixed; top:0; left:0; height:3px; background:var(--red); transition:width .25s ease}
+  .nav-hint{letter-spacing:.05em}
+  .tag{display:inline-block; font-size:11px; letter-spacing:.15em; text-transform:uppercase; padding:4px 10px; border-radius:999px; border:1px solid var(--line); color:var(--muted); margin-right:8px; margin-bottom:14px}
+  .tag.red{border-color:var(--red); color:var(--red)}
+  .tag.green{border-color:var(--green); color:var(--green)}
+  .tag.amber{border-color:var(--amber); color:var(--amber)}
+  .qa{margin-top:14px}
+  .qa .q{font-weight:700; color:var(--ink); font-size:clamp(15px,1.5vw,19px); margin-top:16px}
+  .qa .q::before{content:"Gründer: "; color:var(--red)}
+  .qa .a{color:var(--muted); font-size:clamp(13.5px,1.3vw,16.5px); margin-top:4px; line-height:1.5}
+  .qa .a::before{content:"Fix: "; color:var(--green); font-weight:700}
+  .small{font-size:clamp(12px,1.1vw,14px); color:var(--muted); margin-top:18px; line-height:1.5}
+  @media (max-width:760px){ .cols{grid-template-columns:1fr} .slide{justify-content:flex-start; padding-top:7vh} }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<!-- 1 · Titel -->
+<section class="slide active">
+  <div class="eyebrow">41 Publishing · Magazin-PWA · Adversarial Review · 10.06.2026</div>
+  <h1>Hält der Pilot einer<br>Gründer-Prüfung stand?</h1>
+  <p class="lead">Skeptiker-Befund zum Risiko-Piloten: Was würde die Budget-Freigabe killen, welche Annahmen sind ungeprüft, ist der Stack richtig — und was ist vor dem Termin mit Max &amp; Robin zu tun.</p>
+  <p class="small">Grundlage: komplettes Memory + docs/ + Code-Audit (Studio &amp; Reader) + live verifizierte Sanity-/Vercel-Preise. Langfassung: <strong>docs/skeptiker-review.md</strong></p>
+</section>
+
+<!-- 2 · Kurzurteil -->
+<section class="slide">
+  <div class="eyebrow">Kurzurteil</div>
+  <h2>Starke Demo. <span class="kicker-red">Schwacher Risiko-Pilot.</span></h2>
+  <div class="cols">
+    <div class="card">
+      <h3 class="kicker-green">Was steht</h3>
+      <ul class="points good">
+        <li>Bau-Niveau weit über Erwartung: Studio-Placer, Wow-Features, Werbe-Modell, Swipe-Reader</li>
+        <li>Strategische Vorarbeit solide: Zero-Daten-Befund, dokumentierte Entscheidungen</li>
+        <li>Frühe Architektur-Entscheidungen goldrichtig (kein next/image, ein Dataset)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 class="kicker-red">Was fehlt</h3>
+      <ul class="points">
+        <li>Von den 7 selbst definierten Pflicht-Mess-Fragen ist <strong>keine</strong> belastbar beantwortet</li>
+        <li>Der Pilot ist zur Schönwetter-Demo gedriftet — exakt die Warnung des externen Reviews</li>
+        <li>Business Case existiert nicht (Ist-Kosten unbekannt)</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small">Alle Lücken sind in <strong>Wochen</strong> schließbar — nichts ist ein strukturelles K.O. Aber sie müssen VOR dem Pitch zu, nicht darin erklärt werden.</p>
+</section>
+
+<!-- 3 · K1 -->
+<section class="slide">
+  <span class="tag red">Budget-Killer 1 · härtester</span>
+  <h2>Es gibt keinen Business Case</h2>
+  <p class="lead">Die erste Gründer-Frage ist nicht „kann das offline?", sondern: <strong>„Was kostet uns das heute, was kostet das neue, was sparen wir?"</strong></p>
+  <table>
+    <tr><th>Zahl</th><th>Status</th></tr>
+    <tr><td>Ist-Kosten heute (Button Publish + GZD + App Store)</td><td class="bad">Unbekannt — muss erst erfragt werden</td></tr>
+    <tr><td>Produktions-Kosten PWA (Infra + Dev + Zeit)</td><td class="bad">Nie als Vorlage gerechnet</td></tr>
+    <tr><td>Laufende Traffic-Kosten pro Ausgabe</td><td class="bad">Nie gemessen (Image-Spike steht aus)</td></tr>
+    <tr><td>Erlös-Hebel Premium-Werbung</td><td class="warn">Behauptet, ohne Preis-/Aufwandszahl</td></tr>
+  </table>
+  <p class="small"><strong>Fix:</strong> GZD-Jahresrechnung + Lizenz- + Store-Kosten bei Max/Robin/Buchhaltung erfragen → eine Folie: „Heute X €/Jahr → PWA Y €/Jahr + Z einmalig".</p>
+</section>
+
+<!-- 4 · K2 -->
+<section class="slide">
+  <span class="tag red">Budget-Killer 2</span>
+  <h2>Das Kern-Versprechen ist ungetestet:<br>Es gibt (noch) keine PWA</h2>
+  <ul class="points">
+    <li>Manifest existiert (installierbar ✓) — aber <strong>kein Service Worker, kein Offline, null Caching</strong></li>
+    <li>Das bekannteste Projekt-Risiko (iOS löscht Caches) ist <strong>unangefasst</strong> — der 7-Tage-Realtest dauert Kalenderzeit und muss JETZT starten</li>
+    <li>Gründer-Frage „Funktioniert offline auf meinem iPhone?" → ehrliche Antwort heute: <strong>„Wissen wir nicht."</strong></li>
+    <li>Migration der Bestandsnutzer (App Store → PWA) ohne Plan; Capacitor-Plan-B nur auf Papier</li>
+  </ul>
+  <p class="small">Recherche 2026: Installierte Home-Screen-PWAs sind von der 7-Tage-Eviction offiziell ausgenommen, Praxis-Berichte widersprechen sich → nur der eigene Test zählt.</p>
+</section>
+
+<!-- 5 · K3 -->
+<section class="slide">
+  <span class="tag red">Budget-Killer 3</span>
+  <h2>Der Risiko-Pilot misst nicht,<br>was er messen sollte</h2>
+  <table>
+    <tr><th>Pflicht-Mess-Frage (review-konsequenzen §3)</th><th>Stand 10.06.</th></tr>
+    <tr><td>1 · Traffic-Kosten real (Image-Spike, CDN)</td><td class="bad">Nicht gemessen — Bilder laufen direkt über cdn.sanity.io</td></tr>
+    <tr><td>2 · Zeit pro Artikel</td><td class="warn">Nur Editorial, grob; Rest per Claude-Seeds ≠ Tims Studio-Workflow</td></tr>
+    <tr><td>3 · Offline iOS/Android real</td><td class="bad">Kein Service Worker vorhanden</td></tr>
+    <tr><td>4 · Werbung</td><td class="ok">Am besten beantwortet (eigenes Direktverkaufs-Modell statt GAM)</td></tr>
+    <tr><td>5 · Visuelles Niveau (Julian)</td><td class="bad">Julian hat den Piloten nie gesehen</td></tr>
+    <tr><td>6 · Workflow schneller?</td><td class="warn">Anekdotisch, nicht protokolliert</td></tr>
+    <tr><td>7 · Architektur-Abnahme Senior-Dev</td><td class="bad">Senior-Dev existiert weiterhin nicht</td></tr>
+  </table>
+  <p class="small">Die Review-Korrekturen wurden dokumentiert und akzeptiert — aber nicht gelebt. Ein kritischer Leser findet diese Lücke in fünf Minuten. <strong>Diese Tabelle IST die To-do-Liste bis zum Pitch.</strong></p>
+</section>
+
+<!-- 6 · K4 -->
+<section class="slide">
+  <span class="tag red">Budget-Killer 4</span>
+  <h2>Stakeholder-Lücken</h2>
+  <div class="cols">
+    <div class="card">
+      <h3>Julian (Art Director)</h3>
+      <p>Cover-Hero, Foto-Raster, Award-Layout, Hochformat — lauter Entscheidungen in seinem Revier, ohne ihn. Risiko: Er kippt im Termin <strong>gegen</strong> das Projekt. Eine 1-h-Session vorher macht ihn zum Verbündeten und beantwortet Mess-Frage 5 (Editor-UX, Storyblok-Frage).</p>
+    </div>
+    <div class="card">
+      <h3>Senior-Dev</h3>
+      <p>Beschlossen war: 1–2 Tage Leitplanke VOR dem Bauen. Gebaut wurde seit Mai ohne. Nicht rückwirkend heilbar — aber ein bezahlter Review VOR dem Pitch macht aus dem Makel eine Folie: <strong>„Architektur-Abnahme liegt vor."</strong></p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Leserzahl = Mediakit, nicht Analytics</h3>
+    <p>21.000–35.000 ist die Vermarktungszahl. Echte Nutzungsdaten + iOS/Android-Split fehlen — daran hängen Kostenrechnung UND Offline-Risiko. Vor dem Termin besorgen, nicht darin geschätzt werden.</p>
+  </div>
+</section>
+
+<!-- 7 · K5 -->
+<section class="slide">
+  <span class="tag red">Budget-Killer 5</span>
+  <h2>Die „Tim + KI"-Frage kommt garantiert</h2>
+  <div class="qa">
+    <p class="q">„Was passiert, wenn Tim ausfällt?"</p>
+    <p class="a">Doku-Stand ist real gut (CLAUDE.md, docs/, Memory) — ein neuer Dev findet rein. Als Folie zeigen, nicht behaupten.</p>
+    <p class="q">„Wer hebt ab, wenn am Launch-Tag die Seite weiß ist?"</p>
+    <p class="a">Senior-Dev-Vertrag mit Notfall-SLA ins Produktions-Budget + statische Architektur (quasi nichts kann zur Laufzeit brechen, s. Stack-Teil).</p>
+    <p class="q">„Wer haftet für Security/DSGVO?"</p>
+    <p class="a">Managed-Anbieter tragen Infrastruktur; Pre-Launch-Security-Review durch Senior-Dev; Consent/Legal-Posten benennen (ist als Produktions-To-do bekannt).</p>
+  </div>
+  <p class="small">Diese Antworten existieren verstreut im Projekt — aber nicht als vorbereitete Pitch-Folie. Ausweichen wäre fatal.</p>
+</section>
+
+<!-- 8 · Stack-Urteil -->
+<section class="slide">
+  <div class="eyebrow">Tech-Stack · Sanity + Vercel + Cloudflare</div>
+  <h2><span class="kicker-green">Richtig gewählt</span> — aber die Implementierung widerspricht der eigenen Kostenrechnung</h2>
+  <table>
+    <tr><th>Beschlossen (docs/)</th><th>Gebaut (Code, 10.06.)</th></tr>
+    <tr><td>Cloudflare-CDN vor eigener Asset-Domain</td><td class="bad">Bilder direkt von cdn.sanity.io → zählt 1:1 auf Sanity-Bandwidth, Cloudflare kann nichts cachen</td></tr>
+    <tr><td>Caching „Pflicht bei dieser Leserzahl"</td><td class="bad">force-dynamic + useCdn:false + drafts → jeder Seitenaufruf = Function + Live-API-Hit, null Cache</td></tr>
+    <tr><td>Kostenbewusste Bild-Auslieferung</td><td class="warn">Kein srcset → Phones laden Desktop-Auflösungen</td></tr>
+  </table>
+  <p class="small">Im Pilot bewusst &amp; okay (Draft-Live-Preview = Demo-Gold). Aber im Pitch gilt: <strong>Der eigene Code widerlegt sonst die eigene Kostenfolie.</strong> Story muss sein: „Demo-Modus heute, Produktions-Modus konzipiert + einmal gemessen."</p>
+</section>
+
+<!-- 9 · Statik-Hebel -->
+<section class="slide">
+  <div class="eyebrow">Der größte ungenutzte Hebel</div>
+  <h2>Ein Quartals-Magazin ist der<br><span class="kicker-green">Idealfall für statisches Rendering</span></h2>
+  <p class="lead">Die Ausgabe ändert sich zwischen Erscheinungen nicht. Einmal bauen bei Veröffentlichung → statisch ausliefern (SSG/ISR).</p>
+  <ul class="points good">
+    <li>Vercel-Functions ≈ 0 statt „1 Aufruf pro Leser-Seitenaufruf"</li>
+    <li>Sanity-API-Last ≈ 0 im Lesebetrieb (heute zählt jeder Read aufs 250k-Kontingent)</li>
+    <li>Kein Incident-Pfad „Function crasht am Launch-Tag" → direktes Gegenargument zur Betriebsrisiko-Frage</li>
+    <li>Plan-B-Hosting trivial: statisches Bundle läuft überall (Cloudflare ~$5/Mon)</li>
+  </ul>
+  <p class="small">Keine neue Komponente — eine Render-Strategie-Entscheidung. Gehört exakt in den 1–2-Tage-Senior-Dev-Termin.</p>
+</section>
+
+<!-- 10 · Kostenfallen -->
+<section class="slide">
+  <div class="eyebrow">Kostenfallen · live verifiziert 10.06.2026</div>
+  <h2>Wo es teuer wird — und wo nicht</h2>
+  <table>
+    <tr><th>Falle</th><th>Zahl</th><th>Einordnung</th></tr>
+    <tr><td class="bad">Sanity-Bandwidth ohne CDN-Layer</td><td>$0,30/GB → ~$600/Ausgabe ≈ $8k/Jahr</td><td>DIE Falle. Nur gelöst, wenn Bild-Proxy real gebaut wird</td></tr>
+    <tr><td class="warn">Vercel Hobby = nicht-kommerziell</td><td>Pro: $20/Seat/Mon</td><td>Mit Werbung/echten Lesern Pflicht</td></tr>
+    <tr><td class="warn">Functions durch force-dynamic</td><td>$0,128/h CPU · $2/Mio Edge-Req</td><td>Mit Statik ≈ 0</td></tr>
+    <tr><td class="warn">Sanity-API-Requests (useCdn:false)</td><td>250k inkl., dann $1/25k</td><td>35k Leser reißen das locker; mit Statik irrelevant</td></tr>
+    <tr><td class="bad">Sanity Extra-Datasets</td><td><strong>$999/Mon pro Dataset</strong></td><td>NIE „ein Dataset pro Magazin" — ein Dataset + magazine-Feld (so geplant ✓)</td></tr>
+    <tr><td class="warn">Private Datasets erst ab Growth</td><td>$15/Seat/Mon</td><td>Produktion Pflicht (unveröffentlichte Ausgaben!)</td></tr>
+    <tr><td class="ok">Usage-Drift-Schutz</td><td>Vercel Spend-Cap mit Auto-Pause</td><td>Sofort aktivieren bei Pro (Schutz vor viralen $96k-Fällen)</td></tr>
+  </table>
+</section>
+
+<!-- 11 · Kosten-Szenarien -->
+<section class="slide">
+  <div class="eyebrow">Produktions-Kosten · 4 Magazine</div>
+  <h2>Gut konfiguriert vs. vergessen konfiguriert</h2>
+  <div class="cols">
+    <div class="card">
+      <h3 class="kicker-green">Mit CDN-Layer + Statik</h3>
+      <p class="big" style="color:var(--green)">~$65–85<span style="font-size:.3em">/Monat</span></p>
+      <p>Sanity Growth (3 Seats ≈ $45) + Vercel Pro (1–2 Seats ≈ $20–40) + Cloudflare Free. ≈ $800–1.000/Jahr Infrastruktur.</p>
+    </div>
+    <div class="card">
+      <h3 class="kicker-red">Ohne Bild-Proxy + ohne Caching</h3>
+      <p class="big" style="color:var(--red)">~$8–10k<span style="font-size:.3em">/Jahr</span></p>
+      <p>+$600 Sanity-Overage pro Ausgabe + Function-/API-Kosten obendrauf.</p>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:22px">Der Unterschied ist <strong>keine Anbieter-Eigenschaft, sondern ~1 Woche Architektur-Arbeit</strong> — exakt wofür der Senior-Dev-Tag da ist.</p>
+</section>
+
+<!-- 12 · Abhängigkeiten -->
+<section class="slide">
+  <div class="eyebrow">Abhängigkeiten · ehrlich bilanziert</div>
+  <h2>Wo wir uns binden</h2>
+  <table>
+    <tr><th>Abhängigkeit</th><th>Schwere</th><th>Einordnung</th></tr>
+    <tr><td>Sanity</td><td class="warn">Mittel</td><td>Export sauber (NDJSON + Assets, kein Geisel-Szenario). Bindung: GROQ, Portable Text, Custom-Placer → Wechsel 2–4 Wochen. <strong>Preisdrift real</strong> (Umstellung 2024). Hygiene: regelmäßiger Dataset-Export (heute nicht eingerichtet!)</td></tr>
+    <tr><td>Vercel</td><td class="ok">Niedrig</td><td>Bewusst keine Vercel-Spezialdienste → umzugsfähig (OpenNext/Cloudflare ~$5, Netlify, Self-Host)</td></tr>
+    <tr><td>Cloudflare</td><td class="ok">Niedrig</td><td>Free-CDN für Bild-Caching zulässig; 2 TB/Quartal unauffällig</td></tr>
+    <tr><td>Next.js / React</td><td class="warn">Mittel–Hoch</td><td>Die eigentliche Langzeit-Bindung: 1–2 Wartungs-Sessions/Jahr einplanen</td></tr>
+    <tr><td>Claude / KI + Tim</td><td class="warn">Mittel</td><td>Ehrlich benennen: Betriebsmodell hängt an einer Person + KI-Abo. Abfederung: Doku + Dev-Lifeline + statische Architektur</td></tr>
+  </table>
+  <p class="small"><strong>Fazit Stack: behalten.</strong> Gefährlich ist nur die Lücke zwischen beschlossener und gebauter Architektur — schließbar mit Mess-Spike + Senior-Dev-Tag.</p>
+</section>
+
+<!-- 13 · Code-Befund -->
+<section class="slide">
+  <div class="eyebrow">Code-Audit · Senior-Dev-Blick</div>
+  <h2>Pilot-akzeptabel — als Härtungs-Liste dokumentiert</h2>
+  <ul class="points good" style="margin-bottom:6px">
+    <li><strong>Entkräftet:</strong> „Token im Repo" stimmt NICHT — .env sauber gitignored, History clean, Seeds lesen aus ~/.config ✓</li>
+  </ul>
+  <ul class="points">
+    <li><strong>Drafts öffentlich + indexierbar:</strong> Vercel-URL zeigt Entwurfsstand, kein noindex → vor echten Inhalten fixen (auch SEO-Duplikat zu ebike-mtb.com)</li>
+    <li><strong>Null Caching</strong> (force-dynamic, useCdn:false) + Carousel lädt alle Panels mit vollem Body auf einmal</li>
+    <li><strong>Hardcoded:</strong> eine Ausgabe (ISSUE_ID), Sprache .de in jeder Query — Multi-Issue/EN ist Tage-Arbeit, kein Nachmittag</li>
+    <li><strong>strict:false, keine Tests,</strong> 2.368-Zeilen-CSS, 507-Zeilen-Block-Switch — bewusste Spike-Qualität, vor Produktion modularisieren</li>
+    <li><strong>Kein Sanity-Backup-Export eingerichtet</strong> — billige Versicherung, fehlt</li>
+  </ul>
+  <p class="small">Diese Liste ist die Mitgift für den Senior-Dev-Termin — und zeigt Max &amp; Robin: das Projekt kennt seine Schwächen (Vertrauens-Argument).</p>
+</section>
+
+<!-- 14 · Pitch-Stresstest -->
+<section class="slide">
+  <div class="eyebrow">Pitch-Stresstest</div>
+  <h2>Argumente, die so nicht standhalten</h2>
+  <div class="qa">
+    <p class="q">„Offline-fähig wie die alte App." — „Zeig mir."</p>
+    <p class="a">SW bauen + iOS-7-Tage-Test jetzt starten; sonst umformulieren: „Teststand + Capacitor-Plan-B".</p>
+    <p class="q">„Spart GZD-/Button-Publish-Kosten." — „Wie viel genau?"</p>
+    <p class="a">Ist-Kosten erfragen (Killer 1).</p>
+    <p class="q">„1–2 h pro Artikel." — „Gemessen oder geschätzt?"</p>
+    <p class="a">Einen Artikel von Hand im Studio einpflegen + Zeit stoppen (ohne Claude-Seeds).</p>
+    <p class="q">„Premium-Werbung refinanziert das." — „Hat das je ein Kunde bepreist?"</p>
+    <p class="a">Specialized-Modul einem Vermarkter zeigen, Preis-Hypothese + ehrlichen Aufwand (Stunden–Tage/Modul) mitbringen.</p>
+  </div>
+</section>
+
+<!-- 15 · Plan -->
+<section class="slide">
+  <div class="eyebrow">Empfehlung</div>
+  <h2>Der Weg zur Budget-Freigabe</h2>
+  <div class="cols">
+    <div class="card">
+      <h3>Phase 1 · Mess-Sprint <span class="kicker-amber">(keine neuen Features!)</span></h3>
+      <p>1. Service-Worker-Spike → <strong>iOS-7-Tage-Test sofort starten</strong> (Kalenderzeit!)<br>2. Image-Proxy + Cloudflare → Traffic real messen, srcset<br>3. Zeit-pro-Artikel protokollieren<br>4. Lighthouse-Audit</p>
+    </div>
+    <div class="card">
+      <h3>Phase 2 · Stakeholder &amp; Zahlen</h3>
+      <p>5. Julian-Session (1 h, Editor-UX testen)<br>6. Senior-Dev: 1–2 Tage Review buchen — VOR dem Pitch<br>7. Drei Zahlen: Ist-Kosten heute · echte Leser-Analytics · iOS-Split</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Phase 3 · Pitch-Paket</h3>
+    <p>Business-Case-Folie · Kostenmodell ($65–85/Mon + Dev-Tage) · Risiko-Folie mit Messwerten · <strong>„Was der Pilot bewusst NICHT beweist"</strong>-Folie (Ehrlichkeit schlägt Hochglanz — Kernlehre des externen Reviews) · Produktions-Roadmap mit Härtungs-Liste</p>
+  </div>
+</section>
+
+<!-- 16 · Fairness -->
+<section class="slide">
+  <div class="eyebrow">Zum Schluss · damit das Review fair bleibt</div>
+  <h2 class="kicker-green">Nichts hiervon ist ein strukturelles K.O.</h2>
+  <ul class="points good">
+    <li>Die strategische Grundlage ist ungewöhnlich solide — mehr Vorarbeit als die meisten finanzierten Projekte</li>
+    <li>Frühe Architektur-Entscheidungen überdurchschnittlich gut (next/image-Falle umgangen, $999-Dataset-Falle umgangen, Werbung am echten Verkaufsprozess gebaut)</li>
+    <li>Das gebaute Niveau beweist die Kernthese „Tim + KI können das Produkt bauen" besser als jede Folie</li>
+    <li>Alle Lücken sind in Wochen schließbar — deshalb: VOR dem Gründer-Termin schließen statt darin erklären</li>
+  </ul>
+  <p class="lead" style="margin-top:26px">Nächster Schritt: <strong>Mess-Sprint statt nächster Baustein.</strong></p>
+</section>
+
+<div class="footer">
+  <span id="counter">1 / 16</span>
+  <span class="nav-hint">← → blättern · Klick rechts/links · Esc = Übersicht aus</span>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    document.getElementById('counter').textContent=(i+1)+' / '+slides.length;
+    document.getElementById('progress').style.width=((i+1)/slides.length*100)+'%';
+  }
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown')show(i+1);
+    if(e.key==='ArrowLeft'||e.key==='PageUp')show(i-1);
+    if(e.key==='Home')show(0);
+    if(e.key==='End')show(slides.length-1);
+  });
+  addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
+    (e.clientX>innerWidth/2)?show(i+1):show(i-1);
+  });
+  let tx=null;
+  addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{
+    if(tx===null)return;
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50)show(i+(dx<0?1:-1));
+    tx=null;
+  },{passive:true});
+  show(0);
+</script>
+</body>
+</html>

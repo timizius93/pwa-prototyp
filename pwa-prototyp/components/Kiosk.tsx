@@ -35,6 +35,9 @@ export function Kiosk({data}: {data: any}) {
       {cover ? (
         <header className="kiosk-cover">
           <img className="kiosk-cover-bg" src={cover} alt="" aria-hidden />
+          <Link href="/magazine" className="kiosk-up">
+            ← Magazine
+          </Link>
           <div className="kiosk-cover-logo">
             {logo ? <img src={logo} alt={magName} /> : <span>{magName}</span>}
           </div>
@@ -51,6 +54,9 @@ export function Kiosk({data}: {data: any}) {
         </header>
       ) : (
         <header className="kiosk-hero">
+          <Link href="/magazine" className="kiosk-up kiosk-up--dark">
+            ← Magazine
+          </Link>
           <div className="eyebrow">{magName}</div>
           <h1>#{data?.number} — {data?.title}</h1>
           <p className="kiosk-sub">{articleCount} Artikel in dieser Ausgabe</p>

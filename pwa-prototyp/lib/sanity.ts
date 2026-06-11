@@ -161,6 +161,39 @@ const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
   }
 }`
 
+// 41-Publishing-Regal: alle Magazine in Sanity + ihre jeweils neueste Ausgabe (Kachel-Cover).
+// Die Magazine, die noch nicht in Sanity existieren, ergänzt die Regal-Seite als statische
+// „Bald in der App"-Kacheln (siehe app/magazine/page.tsx).
+const SHELF_QUERY = `*[_type=="magazine"]{
+  name,
+  "slug": slug.current,
+  primaryColor,
+  logo,
+  "latestIssue": *[_type=="issue" && magazine._ref==^._id] | order(number desc)[0]{
+    number, "title": title.de, coverImage, publishDate
+  }
+}`
+
+// Ausgaben-Übersicht EINES Magazins (alle Ausgaben, neueste zuerst).
+const MAGAZINE_ISSUES_QUERY = `*[_type=="magazine" && slug.current==$slug][0]{
+  name,
+  "slug": slug.current,
+  primaryColor,
+  logo,
+  "issues": *[_type=="issue" && magazine._ref==^._id] | order(number desc){
+    number, "title": title.de, coverImage, publishDate,
+    "articleCount": count(*[_type in ["articleEditorial","article"] && issue._ref==^._id])
+  }
+}`
+
+export async function getMagazineShelf() {
+  return client.fetch(SHELF_QUERY)
+}
+
+export async function getMagazineIssues(slug: string) {
+  return client.fetch(MAGAZINE_ISSUES_QUERY, {slug})
+}
+
 export async function getKiosk() {
   return client.fetch(KIOSK_QUERY, {issueId: ISSUE_ID})
 }

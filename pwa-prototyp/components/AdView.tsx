@@ -44,7 +44,7 @@ type AdData = {
 const TOAST_SESSION_KEY = '41mag.adToastShown'
 
 export function AdView({data, active = true}: {data: AdData; active?: boolean}) {
-  if (data.mode === 'custom') return <CustomAd componentId={data.componentId} sponsor={data.sponsor} />
+  if (data.mode === 'custom') return <CustomAd componentId={data.componentId} />
   return <StandardAd data={data} active={active} />
 }
 
@@ -100,8 +100,7 @@ function StandardAd({data, active}: {data: AdData; active: boolean}) {
 
   return (
     <div className="ad-view ad-view--standard">
-      <div className="ad-view__sponsor-label">Anzeige · {data.sponsor}</div>
-
+      {/* Die Kennzeichnung „Anzeige · Sponsor" übernimmt die fixe Topbar des Carousels */}
       <div className="ad-view__stack">
         {images.map((img) => (
           <AdImageBlock key={img._key} img={img} hasGallery={hasGallery} onOpenGallery={openGallery} />
@@ -268,11 +267,10 @@ function AdImageBlock({
 }
 
 // ─── Custom-Modus ──────────────────────────────────────────────────────────────
-function CustomAd({componentId, sponsor}: {componentId?: string; sponsor: string}) {
+function CustomAd({componentId}: {componentId?: string}) {
   if (!componentId || !AD_REGISTRY[componentId]) {
     return (
       <div className="ad-view ad-view--custom-missing">
-        <div className="ad-view__sponsor-label">Anzeige · {sponsor}</div>
         <p>
           Custom-Modul <code>{componentId || '(keine ID gesetzt)'}</code> nicht in der Ad-Registry
           gefunden.
@@ -283,7 +281,6 @@ function CustomAd({componentId, sponsor}: {componentId?: string; sponsor: string
   const Comp = AD_REGISTRY[componentId]
   return (
     <div className="ad-view ad-view--custom">
-      <div className="ad-view__sponsor-label">Anzeige · {sponsor}</div>
       <Comp />
     </div>
   )

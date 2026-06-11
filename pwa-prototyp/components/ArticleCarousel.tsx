@@ -1,6 +1,7 @@
 'use client'
 
 import {useEffect, useRef, useState, useCallback} from 'react'
+import Link from 'next/link'
 import {ArticleView} from './ArticleView'
 import {AdView} from './AdView'
 import {AD_POSTERS} from './ads/registry'
@@ -24,6 +25,8 @@ export function ArticleCarousel({
   const [dragX, setDragX] = useState(0)
   const [animating, setAnimating] = useState(false)
   const [overviewOpen, setOverviewOpen] = useState(false)
+  // Pro Panel: ist das Cover-Hero schon aus dem Viewport gescrollt? (gemeldet von ArticleView)
+  const [pastHero, setPastHero] = useState<Record<number, boolean>>({})
   const viewportRef = useRef<HTMLDivElement>(null)
 
   // Drag-Zustand in einem Ref (ändert sich pro Touch-Frame, soll kein Re-Render auslösen)
@@ -184,12 +187,43 @@ export function ArticleCarousel({
               {a._panelType === 'ad' ? (
                 <AdView data={a} active={i === index} />
               ) : (
-                <ArticleView data={a} nav={{prev, next}} />
+                <ArticleView
+                  data={a}
+                  nav={{prev, next}}
+                  onPastHero={(past) =>
+                    setPastHero((s) => (s[i] === past ? s : {...s, [i]: past}))
+                  }
+                />
               )}
             </div>
           )
         })}
       </div>
+
+      {/* Fixe Topbar: liegt ÜBER dem Track (Geschwister-Element, nicht transformiert) und
+          wandert deshalb beim Swipen nicht mit. Inhalt wechselt mit dem aktiven Panel —
+          Artikel: Titel + Rubrik, Anzeige: Sponsor + „Anzeige". Über Cover-Heros und
+          Anzeigen transparent (Overlay-Modus), sonst solid weiß. */}
+      {(() => {
+        const cur = articles[index]
+        if (!cur) return null
+        const isAd = cur._panelType === 'ad'
+        const hasCoverHero =
+          !isAd && cur.body?.[0]?._type === 'titlePage' && !!cur.body[0]?.coverArtwork?.asset
+        const overCover = hasCoverHero && !pastHero[index]
+        return (
+          <div className={`masthead${isAd || overCover ? ' is-overlay' : ''}`}>
+            <Link href="/" className="brand back" aria-label="Zurück zum Kiosk">
+              ← <span className="brand-name">{cur.magazine?.name || 'E-MOUNTAINBIKE'}</span>
+            </Link>
+            {/* Über dem Cover bleibt der Titel ausgeblendet (sonst doppelt mit dem Cover-Titel) */}
+            <span className={`masthead-title${overCover ? ' is-hidden' : ''}`}>
+              {isAd ? cur.sponsor : cur.title}
+            </span>
+            <span className="issue">{isAd ? 'Anzeige' : cur.category || ''}</span>
+          </div>
+        )
+      })()}
 
       {/* Desktop-Navigation (per CSS nur auf Geräten mit feinem Zeiger sichtbar — am Phone
           regelt das Wischen). Große Editorial-Pfeile links/rechts + Übersicht-Pill unten. */}
@@ -225,7 +259,7 @@ export function ArticleCarousel({
           Touch-Geräten sichtbar — auf Desktop regelt die Pill oben). Kiosk · Übersicht ·
           Position · Teilen. */}
       <nav className="carousel-tabbar" aria-label="Navigation">
-        <a className="tabbar-btn" href="/" aria-label="Zum Kiosk">
+        <a className="tabbar-btn" href="/magazine" aria-label="Zu den Magazinen">
           <svg className="tabbar-ico" viewBox="0 0 24 24" aria-hidden>
             <path d="M3 11.2 12 4l9 7.2" />
             <path d="M5.5 9.8V19a1 1 0 0 0 1 1H10v-5h4v5h3.5a1 1 0 0 0 1-1V9.8" />

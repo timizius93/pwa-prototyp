@@ -1,5 +1,5 @@
 'use client'
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useRef} from 'react'
 import Link from 'next/link'
 import {PortableText, type PortableTextComponents} from '@portabletext/react'
 import {urlFor} from '@/lib/sanity'
@@ -407,7 +407,16 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
   }
 }
 
-export function ArticleView({data, nav}: {data: any; nav: {prev: any; next: any}}) {
+export function ArticleView({
+  data,
+  nav,
+  onPastHero,
+}: {
+  data: any
+  nav: {prev: any; next: any}
+  // Meldet dem Carousel, ob das Cover-Hero aus dem Panel gescrollt ist (steuert die fixe Topbar)
+  onPastHero?: (past: boolean) => void
+}) {
   const body = data.body || []
   const firstTextKey = body.find((b: any) => b._type === 'articleText')?._key
   const hasTitlePage = body.some((b: any) => b._type === 'titlePage')
@@ -424,43 +433,34 @@ export function ArticleView({data, nav}: {data: any; nav: {prev: any; next: any}
     }
   })
 
-  // Cover-Hero-Modus: erster Block ist eine titlePage mit Cover-Artwork → der Masthead schwebt
-  // initial transparent über dem Cover und wird solid, sobald das Cover aus dem Viewport scrollt.
+  // Cover-Hero-Modus: erster Block ist eine titlePage mit Cover-Artwork → die fixe Topbar des
+  // Carousels schwebt initial transparent über dem Cover und wird solid, sobald das Cover aus
+  // dem Panel gescrollt ist. Wir beobachten das hier und melden es per onPastHero nach oben.
   const firstBlock = body[0]
   const hasCoverHero = firstBlock?._type === 'titlePage' && !!firstBlock?.coverArtwork?.asset
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const [pastHero, setPastHero] = useState(false)
+  const onPastHeroRef = useRef(onPastHero)
+  onPastHeroRef.current = onPastHero
 
   useEffect(() => {
     if (!hasCoverHero) return
     const cover = wrapperRef.current?.querySelector('.titlepage.is-cover')
     if (!cover) return
+    // Root = das eigene Panel, NICHT der Viewport: off-screen Panels stehen seitlich im
+    // transformierten Track und würden gegen den Viewport fälschlich als „vorbeigescrollt" zählen.
+    const panel = wrapperRef.current?.closest('.carousel-panel')
     const obs = new IntersectionObserver(
-      ([entry]) => setPastHero(!entry.isIntersecting),
-      {threshold: 0.05},
+      ([entry]) => onPastHeroRef.current?.(!entry.isIntersecting),
+      {root: panel ?? null, threshold: 0.05},
     )
     obs.observe(cover)
     return () => obs.disconnect()
   }, [hasCoverHero])
 
-  const wrapperClass = [
-    'article-page',
-    hasCoverHero && 'has-cover-hero',
-    pastHero && 'is-past-hero',
-  ]
-    .filter(Boolean)
-    .join(' ')
+  const wrapperClass = ['article-page', hasCoverHero && 'has-cover-hero'].filter(Boolean).join(' ')
 
   return (
     <div className={wrapperClass} ref={wrapperRef}>
-      <div className="masthead">
-        <Link href="/" className="brand back" aria-label="Zurück zum Kiosk">
-          ← <span className="brand-name">{data.magazine?.name || 'E-MOUNTAINBIKE'}</span>
-        </Link>
-        {data.title && <span className="masthead-title">{data.title}</span>}
-        <span className="issue">{data.category || ''}</span>
-      </div>
-
       <article className="article">
         {!hasTitlePage && (
           <header className="article-header prose">

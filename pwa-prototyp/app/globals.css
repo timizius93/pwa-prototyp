@@ -39,11 +39,16 @@ body {
 
 img { display: block; max-width: 100%; }
 
-/* ---------- Magazin-Kopfzeile ---------- */
+/* ---------- Magazin-Kopfzeile ----------
+   Lebt als EINE fixe Topbar auf Carousel-Ebene (Geschwister des transformierten Tracks,
+   gerendert in ArticleCarousel) — wandert beim Swipen nicht mit; Inhalt wechselt mit dem
+   aktiven Panel (Artikel: Titel + Rubrik, Anzeige: Sponsor + „Anzeige"). */
 .masthead {
-  position: sticky;
+  position: absolute;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 30; /* über den Panels, unter Tabbar (40) und Übersicht (60) */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -54,7 +59,33 @@ img { display: block; max-width: 100%; }
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
+    text-shadow 0.25s ease;
 }
+/* Sanfter Scrim für den Overlay-Modus — hält die Topbar auch über hellen Covern/Anzeigen
+   lesbar. Immer da, nur im Overlay-Modus sichtbar (weich ein-/ausblendbar). */
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -48px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+/* Overlay-Modus: über Cover-Heros und Anzeigen schwebt die Topbar transparent mit hellem
+   Text, sonst solid weiß. Gesteuert vom Carousel (aktives Panel + IntersectionObserver). */
+.masthead.is-overlay {
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.masthead.is-overlay::before { opacity: 1; }
+.masthead.is-overlay .brand.back { color: inherit; }
+.masthead.is-overlay .issue { color: rgba(255, 255, 255, 0.75); }
 .masthead .brand { font-weight: 700; flex-shrink: 0; }
 .masthead .issue { color: var(--muted); flex-shrink: 0; }
 /* Aktueller Artikel-Titel, mittig, abgeschnitten bei Überlänge (kein Uppercase — soll als
@@ -72,14 +103,12 @@ img { display: block; max-width: 100%; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-/* Cover-Hero: Titel erst einblenden, wenn man am Cover vorbei ist (sonst doppelt mit dem
-   großen Cover-Titel). Reuse des is-past-hero-States. */
-.article-page.has-cover-hero .masthead-title {
-  opacity: 0;
   transition: opacity 0.25s ease;
 }
-.article-page.has-cover-hero.is-past-hero .masthead-title { opacity: 1; }
+.masthead.is-overlay .masthead-title { color: inherit; }
+/* Cover-Hero: Titel erst einblenden, wenn man am Cover vorbei ist (sonst doppelt mit dem
+   großen Cover-Titel). Klasse setzt das Carousel. */
+.masthead-title.is-hidden { opacity: 0; }
 
 /* ---------- Titelseite ----------
    Drei Modi (siehe titlePage.ts):
@@ -176,30 +205,15 @@ img { display: block; max-width: 100%; }
 }
 
 /* Cover-Modus: durchgestaltetes Cover-Bild füllt den ersten Screen vollflächig (100dvh).
-   dvh statt vh, damit Safari-iOS' Toolbar-Höhe sauber abgezogen wird.
-   margin-top schluckt die Masthead-Höhe, damit das Cover hinter den (transparenten) Masthead
-   reicht und visuell die volle Viewport-Höhe füllt. */
+   dvh statt vh, damit Safari-iOS' Toolbar-Höhe sauber abgezogen wird. Die Topbar liegt
+   als fixes Overlay des Carousels darüber (Lesbarkeits-Scrim bringt sie selbst mit). */
 .titlepage.is-cover {
   position: relative;
   padding: 0;
-  margin-top: calc(-1 * var(--masthead-h));
   height: 100dvh;
   min-height: 100dvh;
   background: #000;
   display: block;
-}
-/* Sanfte Top-Vignette, damit der transparente Masthead auch über hellen Cover-Bereichen
-   (Himmel, weiße Hintergründe) lesbar bleibt. Verläuft schnell aus → fällt visuell kaum auf. */
-.titlepage.is-cover::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: calc(var(--masthead-h) + 48px);
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%);
-  pointer-events: none;
-  z-index: 1;
 }
 .titlepage.is-cover picture,
 .titlepage.is-cover .cover-art {
@@ -209,31 +223,11 @@ img { display: block; max-width: 100%; }
   object-fit: cover;
 }
 
-/* Über dem Cover schwebt der Masthead transparent, damit das Cover unangeschnitten lesbar bleibt.
-   Sobald der Cover-Block aus dem Viewport scrollt (.is-past-hero, gesetzt vom IntersectionObserver
-   in ArticleView), kehrt der Masthead in den normalen, soliden Zustand zurück. */
-.article-page.has-cover-hero .masthead {
-  background: transparent;
-  backdrop-filter: none;
-  border-bottom-color: transparent;
-  color: rgba(255, 255, 255, 0.95);
-  /* Zusätzliche Schärfe für die Lesbarkeit, falls die Top-Vignette mal nicht reicht. */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
-    text-shadow 0.25s ease;
-}
-.article-page.has-cover-hero .masthead .brand.back { color: inherit; }
-.article-page.has-cover-hero .masthead .issue { color: rgba(255, 255, 255, 0.75); }
-.article-page.has-cover-hero.is-past-hero .masthead {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: saturate(180%) blur(12px);
-  border-bottom-color: var(--line);
-  color: var(--ink);
-  text-shadow: none;
-}
-.article-page.has-cover-hero.is-past-hero .masthead .issue { color: var(--muted); }
-
 /* ---------- Artikel-Fluss ---------- */
+/* Die Topbar ist aus dem Panel-Fluss raus (fixes Overlay des Carousels) → normale Artikel
+   starten unter ihr; Cover-Heros laufen bewusst dahinter durch (volle Viewport-Höhe). */
+.article-page { padding-top: var(--masthead-h); }
+.article-page.has-cover-hero { padding-top: 0; }
 .article { padding-bottom: 120px; }
 
 .prose {
@@ -1568,17 +1562,8 @@ a[x-apple-data-detectors] {
   align-items: center;
   position: relative;
 }
-.ad-view__sponsor-label {
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  padding: 10px 16px;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  z-index: 2;
-}
+/* Die Kennzeichnung „Anzeige · Sponsor" übernimmt die fixe Topbar des Carousels
+   (Overlay-Modus) — kein eigenes Sponsor-Label im Panel mehr. */
 
 /* Standard-Anzeige = full-bleed, vertikal scrollbar wie die alte Querformat-App:
    die Anzeige füllt die Panel-Breite, man scrollt durch die „Screens" (je 16:9). */
@@ -1784,17 +1769,10 @@ a[x-apple-data-detectors] {
   to { opacity: 0; transform: translate(-50%, 12px); }
 }
 
-/* Custom-Ad: kein Letterbox — die Komponente liefert ihr eigenes Layout.
-   Sponsor-Label schwebt als Overlay (absolute), damit es den 100dvh-Inhalt der
-   Komponente NICHT nach unten schiebt (sonst rutscht der Slogan unter die Fold). */
+/* Custom-Ad: kein Letterbox — die Komponente liefert ihr eigenes Layout. */
 .ad-view--custom {
   background: #000;
   padding: 0;
-}
-.ad-view--custom .ad-view__sponsor-label {
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 .ad-view--custom-missing {
   padding: 60px 24px;
@@ -2456,4 +2434,246 @@ a[x-apple-data-detectors] {
   .testers-nav {
     display: none;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NAVIGATIONS-HIERARCHIE: 41 Publishing (Regal) → Magazin (Ausgaben) → Kiosk
+   /magazine = Verlags-Übersicht mit den vier Marken, /magazine/<slug> = alle
+   Ausgaben eines Magazins. Erster Aufschlag — Design-Pass später mit Julian.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ---------- Regal (41-Publishing-Übersicht) ---------- */
+.shelf {
+  max-width: var(--maxWide);
+  margin: 0 auto;
+  padding: 0 24px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.shelf-head {
+  text-align: center;
+  padding: clamp(48px, 8vh, 96px) 0 40px;
+}
+.shelf-publisher-logo {
+  height: clamp(26px, 3vw, 36px);
+  width: auto;
+  margin: 0 auto;
+  display: block;
+}
+.shelf-head h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-top: 14px;
+}
+.shelf-sub { color: var(--muted); margin-top: 10px; }
+
+.shelf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+  gap: 24px;
+  padding-bottom: 40px;
+}
+.shelf-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #101014;
+  color: #fff;
+  text-decoration: none;
+}
+.shelf-tile-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.shelf-tile.is-active:hover .shelf-tile-bg { transform: scale(1.04); }
+/* Dunkler Verlauf unten, damit Logo/Meta auf jedem Cover lesbar bleiben */
+.shelf-tile.is-active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: 1;
+}
+.shelf-tile-inner {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 6px;
+  padding: clamp(18px, 3vw, 28px);
+}
+/* max-Größen statt fester Höhe: die Wortmarken (ENDURO/DOWNTOWN/E-MTB) sind breit,
+   das GRAN-FONDO-Logo ist gestapelt (Wappen + Schriftzug) — beide müssen passen. */
+.shelf-tile-logo {
+  width: auto;
+  height: auto;
+  max-height: clamp(36px, 4.5vw, 56px);
+  max-width: min(60%, 300px);
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
+}
+.shelf-tile-logo.is-stacked { max-height: clamp(72px, 9vw, 110px); }
+.shelf-tile-name {
+  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.shelf-issue-pill,
+.shelf-soon-pill {
+  margin-top: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.shelf-issue-pill { background: #fff; color: var(--ink); }
+.shelf-soon-pill {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+/* „Bald"-Kacheln: gedeckt, Inhalt mittig — bewusst stiller als die aktive Kachel */
+.shelf-tile.is-soon .shelf-tile-inner {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.shelf-tile.is-soon .shelf-tile-name { color: rgba(255, 255, 255, 0.85); }
+.shelf .kiosk-footer { margin-top: auto; }
+
+/* ---------- Ausgaben-Übersicht eines Magazins ---------- */
+.mag-issues {
+  max-width: var(--maxWide);
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  min-height: 100dvh;
+}
+.mag-issues-head {
+  text-align: center;
+  padding: clamp(40px, 7vh, 80px) 0 36px;
+  position: relative;
+}
+.mag-back {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--muted);
+}
+.mag-back:hover { color: var(--ink); }
+.mag-issues-logo {
+  width: auto;
+  height: auto;
+  max-height: clamp(44px, 7vw, 72px);
+  max-width: min(72vw, 380px);
+  margin: 0 auto;
+  display: block;
+}
+.mag-issues-name {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin-top: 24px;
+}
+.issues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 28px;
+  max-width: 840px;
+  margin: 0 auto;
+}
+.issue-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+/* Hochformat-Karte wie ein Heft im Regal (4:5, Crop folgt dem Studio-Hotspot);
+   bewusst ohne Hover-Lift (Tim, 11.06.). */
+.issue-card-cover {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f0f0f2;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+.issue-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.issue-card-num {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.issue-card-empty { width: 100%; height: 100%; background: linear-gradient(135deg, #e9eef2, #d6dde3); }
+.issue-card-body { padding: 14px 2px 0; }
+.issue-card-date {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.issue-card-title { font-size: 1.2rem; font-weight: 700; line-height: 1.2; margin-top: 6px; }
+.issue-card-count { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.issues-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 48px;
+}
+
+/* ---------- Kiosk: Weg nach oben zur Magazin-Ebene ---------- */
+.kiosk-up {
+  position: absolute;
+  top: clamp(18px, 3vw, 32px);
+  right: clamp(20px, 4vw, 56px);
+  /* 3, nicht 2: .kiosk-cover-logo ist ein volle-Breite-Block mit z-index 2 NACH der Pill
+     im DOM — bei gleichem z-index fängt er die Klicks auf der Pill ab. */
+  z-index: 3;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.kiosk-up:hover { background: rgba(0, 0, 0, 0.5); }
+.kiosk-up--dark {
+  position: static;
+  display: inline-block;
+  margin-bottom: 18px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--ink);
 }

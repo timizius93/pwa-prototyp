@@ -161,15 +161,20 @@ const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
   }
 }`
 
-// 41-Publishing-Regal: alle Magazine in Sanity + ihre jeweils neueste Ausgabe (Kachel-Cover).
-// Die Magazine, die noch nicht in Sanity existieren, ergänzt die Regal-Seite als statische
-// „Bald in der App"-Kacheln (siehe app/magazine/page.tsx).
+// 41-Publishing-Regal: alle Magazine in Sanity + ihre jeweils neueste LESBARE Ausgabe
+// (Kachel-Cover + „Aktuelle Ausgabe"-Pill). Lesbar = hat Artikel — Platzhalter-Ausgaben
+// (z. B. #043 nur mit Cover) sollen die Regal-Kachel nicht kapern, der Kiosk zeigt ja
+// weiter die Ausgabe mit Inhalt. Die Magazine, die noch nicht in Sanity existieren,
+// ergänzt die Regal-Seite als statische „Bald in der App"-Kacheln (app/magazine/page.tsx).
 const SHELF_QUERY = `*[_type=="magazine"]{
   name,
   "slug": slug.current,
   primaryColor,
   logo,
-  "latestIssue": *[_type=="issue" && magazine._ref==^._id] | order(number desc)[0]{
+  "latestIssue": *[
+    _type=="issue" && magazine._ref==^._id
+    && count(*[_type in ["articleEditorial","article"] && issue._ref==^._id]) > 0
+  ] | order(number desc)[0]{
     number, "title": title.de, coverImage, publishDate
   }
 }`

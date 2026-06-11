@@ -1749,14 +1749,19 @@ a[x-apple-data-detectors] {
 .ad-view__toast {
   position: fixed;
   left: 50%;
-  bottom: 32px;
+  /* Über der schwebenden Tabbar (Touch) bzw. der Desktop-Nav-Pill — nie überlagern */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
   transform: translateX(-50%);
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  font-size: 14px;
+  padding: 8px 16px;
+  background: rgba(18, 18, 20, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   z-index: 50;
   animation: adToastIn 0.25s ease, adToastOut 0.4s ease 2.6s forwards;
   pointer-events: none;
@@ -1989,6 +1994,14 @@ a[x-apple-data-detectors] {
     text-align: center;
     margin-bottom: 0;
   }
+}
+
+/* Schutzraum auf Touch-Geräten: dort schwebt die Carousel-Tabbar über dem unteren
+   Rand und würde den CTA-Button verdecken (Tabbar ~50px + 16px Abstand + Safe-Area).
+   WICHTIG: muss NACH dem max-width-720-Block stehen — der setzt das padding von
+   .splz__bottom neu und würde diese Regel sonst bei gleicher Spezifität überschreiben. */
+@media (hover: none), (pointer: coarse) {
+  .splz__bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 104px); }
 }
 
 /* Debug-Overlay (?debug=1) — Computed-Styles der kritischen Elemente direkt auf dem

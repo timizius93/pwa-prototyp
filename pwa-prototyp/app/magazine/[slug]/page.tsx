@@ -46,8 +46,8 @@ export default async function Page({params}: {params: Promise<{slug: string}>}) 
           const cover = iss.coverImage?.asset
             ? urlFor(iss.coverImage).width(1200).height(1500).fit('crop').auto('format').url()
             : null
-          return (
-            <Link key={iss.number} href="/" className="issue-card">
+          const inner = (
+            <>
               <div className="issue-card-cover">
                 {cover ? <img src={cover} alt="" /> : <div className="issue-card-empty" />}
                 <span className="issue-card-num">#{String(iss.number).padStart(3, '0')}</span>
@@ -61,7 +61,18 @@ export default async function Page({params}: {params: Promise<{slug: string}>}) 
                   <div className="issue-card-count">{iss.articleCount} Artikel</div>
                 )}
               </div>
+            </>
+          )
+          // Platzhalter-Ausgaben ohne Artikel sind (noch) nicht lesbar → keine Verlinkung
+          // (würde sonst irreführend in den Kiosk der aktuellen Ausgabe springen).
+          return iss.articleCount > 0 ? (
+            <Link key={iss.number} href="/" className="issue-card">
+              {inner}
             </Link>
+          ) : (
+            <div key={iss.number} className="issue-card">
+              {inner}
+            </div>
           )
         })}
       </div>

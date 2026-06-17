@@ -148,4 +148,36 @@ MB-pro-Leser oben): „X % der Bild-Auslieferung kommt aus dem CDN, Sanity-Origi
   einem echten 40-Artikel-Heft.
 - srcset deckt die **angezeigten** Bilder ab; klick-nachgeladene Detail-Popups (Hotspots) sind
   unverändert (bewusst, kleine Bilder).
+
+---
+
+## 5. Last-Test an einer echten Ausgabe (17.06.) — Nachtrag
+
+Um nicht aus 6 Panels hochzurechnen, eine **reale Ausgaben-Größe nachgebaut**: `issue-lasttest`,
+33 Panels (24 Artikel + 9 Anzeigen) mit **431 echten Magazin-Fotos** (4000 px, aus
+`pilot-content/loadtest-bilder/`) in Tims durchgezählter Bildverteilung. Skripte:
+`pwa-prototyp/scripts/loadtest-{seed,cleanup,measure}`.
+
+**Echte Bildzahl korrigiert die Kostengrundlage:** Tim hat eine reale Ausgabe durchgezählt →
+**474 Bilder**, nicht die in `cms-entscheidung.md §5` geschätzten ~200 (**2,4× zu niedrig**).
+Die Bild-Bandbreite/Kosten sind also höher als gerechnet — srcset + CDN sind damit Pflicht.
+
+**Zwei Befunde:**
+1. **DOM-Skalierung:** 414 img-Tags, 8.023 DOM-Knoten, **1,34 MB HTML** (vs. 0,22 MB bei 6 Panels) —
+   das Carousel lädt *alle* Panels in einen State. Lighthouse (Kiosk) trotzdem **94/100** (TBT 10 ms).
+2. **iOS-Memory-Crash (der harte Befund):** Die volle Ausgabe **stürzt auf dem iPhone ab**
+   („… ist wiederholt ein Problem aufgetreten"). Alle 431 Bilder hängen gleichzeitig im DOM →
+   alle dekodiert im RAM (dekodiert ≈ Pixel×4, ~3 MB/Bild selbst als kleine srcset-Stufe → >1 GB)
+   → iOS-Tab-Limit (~1–1,5 GB) gesprengt. **M4-MacBook läuft flüssig** (genug RAM) → kein Speed-
+   oder Code-Problem, reines iOS-Speicher-Limit.
+
+**Konsequenz:** **srcset löst die Bandbreite, NICHT den Speicher.** Für Produktions-Ausgaben muss
+das `ArticleCarousel` **virtualisieren** (nur aktives ± Nachbar-Panel mounten, Rest leerer
+Platzhalter gleicher Größe). → **nächster Bau-Schritt (eigene Session): Carousel-Lazy-Mount**,
+danach Gegentest gegen `issue-lasttest` am iPhone.
+
+> Die absolute MB-Zahl ließ sich headless nicht sauber messen (Sanity rendert die srcset-Stufen
+> der 4000-px-Originale on-the-fly → Massen-Fetch läuft ins Transform-Limit). Belastbar bleibt die
+> **Ersparnis-Quote** (Verhältnis) aus §2 + Tims **iPhone-Gefühl** (am Mac flüssig, am iPhone
+> Memory-Crash). Echte Cache-Hit-/Origin-Zahlen kommen mit dem Cloudflare-Setup (§3).
 ```

@@ -174,6 +174,19 @@ export function ArticleCarousel({
         onTransitionEnd={() => setAnimating(false)}
       >
         {articles.map((a, i) => {
+          // VIRTUALISIERUNG: Nur das aktive Panel ± 1 Nachbar wird real gemountet, der Rest
+          // bleibt ein leerer Platzhalter gleicher Breite (100vw) → die translateX-Mathematik
+          // und die Snap-/Swipe-Mechanik bleiben unverändert. Hintergrund: ALLE Panels einer
+          // echten Ausgabe (33 Panels / ~430 Bilder) gleichzeitig zu mounten sprengt das
+          // iOS-Safari-Tab-Speicherlimit (~1–1,5 GB dekodierte Pixel) → Tab-Crash. Radius 1
+          // genügt, weil das einlaufende Panel beim Swipe immer schon der gemountete Nachbar
+          // ist (kein Pop-in des sichtbaren Panels). Siehe Last-Test 17.06.
+          const mounted = Math.abs(i - index) <= 1
+          if (!mounted) {
+            // Platzhalter: gleiche Geometrie (flex: 0 0 100vw via .carousel-panel), kein Inhalt.
+            return <div className="carousel-panel" key={a.slug || i} aria-hidden />
+          }
+
           // Nav-Titel-Fallback: Anzeigen haben kein `title`, also „Anzeige · <Sponsor>"
           const navTitle = (p: any) =>
             p._panelType === 'ad' ? `Anzeige · ${p.sponsor || ''}`.trim() : p.title

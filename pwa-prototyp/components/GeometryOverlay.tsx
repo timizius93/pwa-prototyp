@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet} from '@/lib/image'
 import {availableSizes, buildItems, COLLAPSE_AT, parseImageDims} from '@/lib/geometry'
 import {GeometrySvg} from './GeometrySvg'
 
@@ -11,7 +11,7 @@ import {GeometrySvg} from './GeometrySvg'
 // Geometrie-Logik (Maps, Items, Reihenfolge) liegt geteilt in lib/geometry.ts.
 
 function img(src: any, w: number) {
-  return urlFor(src).width(w).fit('max').auto('format').url()
+  return imgUrl(src, w)
 }
 
 export function GeometryOverlay({block}: {block: any}) {
@@ -35,7 +35,7 @@ export function GeometryOverlay({block}: {block: any}) {
   return (
     <section className="geo">
       <div className="geo-stage">
-        <img className="geo-photo" src={img(block.bikePhoto, 2000)} alt="" loading="lazy" />
+        <img className="geo-photo" {...imgSet(block.bikePhoto, '100vw')} alt="" loading="lazy" />
 
         {/* dunkle Ebene, damit weiße Linien + Labels besser lesbar sind */}
         <div className="geo-scrim" aria-hidden="true" />

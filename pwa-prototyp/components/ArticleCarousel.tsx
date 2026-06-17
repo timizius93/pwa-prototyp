@@ -6,6 +6,7 @@ import {ArticleView} from './ArticleView'
 import {AdView} from './AdView'
 import {AD_POSTERS} from './ads/registry'
 import {urlFor} from '@/lib/sanity'
+import {withImageHost} from '@/lib/image'
 
 // Lücke zwischen den Panels (wie der weiße Rand zwischen Fotos in der iPhone-Fotos-App)
 const GAP = 24
@@ -312,7 +313,7 @@ export function ArticleCarousel({
                 const label = isAd ? 'Anzeige' : p.category
                 // Custom-Ads haben keine Sanity-`thumb` → Poster aus der Registry verwenden.
                 const thumbSrc = p.thumb
-                  ? urlFor(p.thumb).width(480).height(320).fit('crop').auto('format').url()
+                  ? withImageHost(urlFor(p.thumb).width(480).height(320).fit('crop').auto('format').url())
                   : (isAd && p.componentId && AD_POSTERS[p.componentId]) || null
                 return (
                   <button

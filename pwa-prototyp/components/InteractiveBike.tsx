@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react'
 import {createPortal} from 'react-dom'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet} from '@/lib/image'
 import {availableSizes, buildItems, COLLAPSE_AT, parseImageDims} from '@/lib/geometry'
 import {GeometrySvg} from './GeometrySvg'
 
@@ -15,7 +15,7 @@ import {GeometrySvg} from './GeometrySvg'
 type Mode = 'details' | 'geometry'
 
 function img(src: any, w: number) {
-  return urlFor(src).width(w).fit('max').auto('format').url()
+  return imgUrl(src, w)
 }
 
 export function InteractiveBike({block}: {block: any}) {
@@ -78,7 +78,7 @@ export function InteractiveBike({block}: {block: any}) {
       )}
 
       <div className="ibike-stage">
-        <img className="ibike-photo" src={img(block.bikePhoto, 2000)} alt="" loading="lazy" />
+        <img className="ibike-photo" {...imgSet(block.bikePhoto, '100vw')} alt="" loading="lazy" />
 
         {effMode === 'geometry' && (
           <>

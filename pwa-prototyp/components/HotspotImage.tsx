@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet} from '@/lib/image'
 
 // Interaktives Foto mit +-Markern. Antippen öffnet ein Overlay (Detail-Foto + Text).
 //
@@ -19,7 +19,7 @@ type Hotspot = {
 }
 
 function img(src: any, w: number) {
-  return urlFor(src).width(w).fit('max').auto('format').url()
+  return imgUrl(src, w)
 }
 
 export function HotspotImage({block}: {block: any}) {
@@ -34,7 +34,7 @@ export function HotspotImage({block}: {block: any}) {
   return (
     <figure className="hotspot-figure">
       <div className="hotspot-stage">
-        <img className="hotspot-base" src={img(block.baseImage, 2000)} alt="" loading="lazy" />
+        <img className="hotspot-base" {...imgSet(block.baseImage, '100vw')} alt="" loading="lazy" />
 
         {hotspots.map((h) => (
           <button

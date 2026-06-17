@@ -1,9 +1,9 @@
 'use client'
 import {useEffect, useRef, useState} from 'react'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet} from '@/lib/image'
 
 function img(src: any, w: number) {
-  return urlFor(src).width(w).fit('max').auto('format').url()
+  return imgUrl(src, w)
 }
 
 // Tester-„Slideshow": eine große, luftige Slide pro Ansicht (Foto + Bio nebeneinander),
@@ -154,7 +154,9 @@ export function TesterCarousel({block}: {block: any}) {
         <div className="testers-track" ref={trackRef} onScroll={onScroll} data-hscroll>
           {testers.map((t: any) => (
             <figure className="tester-slide" key={t._id}>
-              {t.portrait?.asset && <img src={img(t.portrait, 1000)} alt={t.name} loading="lazy" />}
+              {t.portrait?.asset && (
+                <img {...imgSet(t.portrait, '(max-width: 720px) 100vw, 420px', 1440)} alt={t.name} loading="lazy" />
+              )}
               <figcaption>
                 {t.role && <div className="tester-role">{t.role}</div>}
                 <div className="tester-name">{t.name}</div>

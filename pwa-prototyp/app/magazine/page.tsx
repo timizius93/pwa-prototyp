@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import {getMagazineShelf, urlFor} from '@/lib/sanity'
+import {getMagazineShelf} from '@/lib/sanity'
+import {imgUrl, imgSetCrop} from '@/lib/image'
 import {BRAND_LOGOS} from '@/lib/brandLogos'
 
 export const dynamic = 'force-dynamic'
@@ -53,11 +54,11 @@ export default async function Page() {
           }
 
           const cover = mag.latestIssue?.coverImage?.asset
-            ? urlFor(mag.latestIssue.coverImage).width(1400).height(900).fit('crop').auto('format').url()
+            ? imgSetCrop(mag.latestIssue.coverImage, 1400, 900, '(max-width: 720px) 100vw, 600px')
             : null
           // Lokales Verlags-Logo (neg = weiß) vor dem Sanity-Asset bevorzugen
           const logo =
-            negLogo || (mag.logo?.asset ? urlFor(mag.logo).width(700).auto('format').url() : null)
+            negLogo || (mag.logo?.asset ? imgUrl(mag.logo, 700) : null)
           const issueLine = mag.latestIssue
             ? `Aktuelle Ausgabe #${String(mag.latestIssue.number).padStart(3, '0')}${
                 dateLabel(mag.latestIssue.publishDate) ? ` · ${dateLabel(mag.latestIssue.publishDate)}` : ''
@@ -66,7 +67,7 @@ export default async function Page() {
 
           return (
             <Link key={brand.slug} href={`/magazine/${mag.slug}`} className="shelf-tile is-active">
-              {cover && <img className="shelf-tile-bg" src={cover} alt="" aria-hidden />}
+              {cover && <img className="shelf-tile-bg" {...cover} alt="" aria-hidden />}
               <div className="shelf-tile-inner">
                 {logo ? (
                   <img className={logoClass} src={logo} alt={mag.name} />

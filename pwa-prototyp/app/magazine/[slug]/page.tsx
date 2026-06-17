@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {notFound} from 'next/navigation'
-import {getMagazineIssues, urlFor} from '@/lib/sanity'
+import {getMagazineIssues} from '@/lib/sanity'
+import {imgSetCrop} from '@/lib/image'
 import {BRAND_LOGOS} from '@/lib/brandLogos'
 
 export const dynamic = 'force-dynamic'
@@ -44,12 +45,12 @@ export default async function Page({params}: {params: Promise<{slug: string}>}) 
           // Hochformat-Karte wie ein Heft im Regal (Tim, 11.06.) — 4:5-Crop,
           // der Bildausschnitt folgt dem Hotspot aus dem Studio.
           const cover = iss.coverImage?.asset
-            ? urlFor(iss.coverImage).width(1200).height(1500).fit('crop').auto('format').url()
+            ? imgSetCrop(iss.coverImage, 1200, 1500, '(max-width: 720px) 90vw, 380px')
             : null
           const inner = (
             <>
               <div className="issue-card-cover">
-                {cover ? <img src={cover} alt="" /> : <div className="issue-card-empty" />}
+                {cover ? <img {...cover} alt="" /> : <div className="issue-card-empty" />}
                 <span className="issue-card-num">#{String(iss.number).padStart(3, '0')}</span>
               </div>
               <div className="issue-card-body">

@@ -2,7 +2,7 @@
 import {useEffect, useRef} from 'react'
 import Link from 'next/link'
 import {PortableText, type PortableTextComponents} from '@portabletext/react'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet} from '@/lib/image'
 import {HotspotImage} from './HotspotImage'
 import {GeometryOverlay} from './GeometryOverlay'
 import {InteractiveBike} from './InteractiveBike'
@@ -40,8 +40,10 @@ const ptComponents: PortableTextComponents = {
   },
 }
 
+// Einzelbild-URL via zentralen Helper → läuft durch den Bild-Host-Swap (Cloudflare-ready).
+// Große Bilder nutzen stattdessen imgSet() (srcset); img() bleibt für kleine (Siegel etc.).
 function img(src: any, w: number) {
-  return urlFor(src).width(w).fit('max').auto('format').url()
+  return imgUrl(src, w)
 }
 
 // Fullbleed-Foto mit optionalem Scroll-Effekt (Feld `scrollEffect` im Schema):
@@ -56,12 +58,12 @@ function img(src: any, w: number) {
 // (siehe AdView.tsx). Wir transformieren deshalb das Bild rein per `transform` INNERHALB
 // eines overflow:hidden-Rahmens; das ist transform-unabhängig und funktioniert im Panel.
 function FullbleedPhoto({
-  src,
+  image,
   caption,
   effect = 'none',
   gear,
 }: {
-  src: string
+  image: any
   caption?: string
   effect?: string
   gear?: {label?: string; value?: string}[]
@@ -125,12 +127,15 @@ function FullbleedPhoto({
     }
   }, [effect])
 
+  // Full-bleed = volle Viewport-Breite → sizes '100vw'. Phone lädt ~768–1440 px statt 2200 px.
+  const imgProps = imgSet(image, '100vw')
+
   // „Keiner": statisches Foto wie früher (variable Höhe, kein fester Rahmen)
   if (effect !== 'parallax' && effect !== 'scale' && effect !== 'kenBurns') {
     return (
       <figure className="fullbleed">
         <div className="fullbleed-static">
-          <img src={src} alt={caption || ''} loading="lazy" />
+          <img {...imgProps} alt={caption || ''} loading="lazy" />
           {gearOverlay}
         </div>
         {caption && <figcaption className="caption">{caption}</figcaption>}
@@ -141,7 +146,7 @@ function FullbleedPhoto({
   return (
     <figure className="fullbleed" ref={figRef}>
       <div className={`fullbleed-frame fx-${effect}`}>
-        <img ref={imgRef} src={src} alt={caption || ''} loading="lazy" />
+        <img ref={imgRef} {...imgProps} alt={caption || ''} loading="lazy" />
         {gearOverlay}
       </div>
       {caption && <figcaption className="caption">{caption}</figcaption>}
@@ -203,7 +208,7 @@ function PhotoGrid({images, layout, mirror}: {images: any[]; layout: string; mir
     <div className={`grid grid--${layout}${mirror ? ' grid--mirror' : ''}`} ref={ref}>
       {images.map((image: any, i: number) => (
         <div className="grid-cell" key={image._key || i}>
-          <img src={img(image, 1400)} alt="" loading="lazy" />
+          <img {...imgSet(image, '(max-width: 720px) 100vw, 50vw')} alt="" loading="lazy" />
         </div>
       ))}
     </div>
@@ -217,15 +222,17 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
       // <picture> liefert dem Smartphone (orientation: portrait) das Hochformat,
       // sonst das Querformat. Sanity-CDN liefert die jeweils kleinste passende Größe.
       if (block.coverArtwork?.asset) {
-        const landscape = img(block.coverArtwork, 2400)
+        const landscape = imgSet(block.coverArtwork, '100vw')
         const portrait = block.coverArtworkMobile?.asset
-          ? img(block.coverArtworkMobile, 1440)
+          ? imgSet(block.coverArtworkMobile, '100vw')
           : null
         return (
           <header className="titlepage is-cover">
             <picture>
-              {portrait && <source media="(orientation: portrait)" srcSet={portrait} />}
-              <img className="cover-art" src={landscape} alt={block.title || ''} />
+              {portrait && (
+                <source media="(orientation: portrait)" srcSet={portrait.srcSet} sizes={portrait.sizes} />
+              )}
+              <img className="cover-art" {...landscape} alt={block.title || ''} />
             </picture>
           </header>
         )
@@ -234,7 +241,7 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
       const hasFg = !!block.foregroundImage?.asset
       return (
         <header className={`titlepage${hasBg ? ' has-bg' : ''}${hasFg ? ' has-fg' : ''}`}>
-          {hasBg && <img className="bg" src={img(block.backgroundImage, 2400)} alt="" />}
+          {hasBg && <img className="bg" {...imgSet(block.backgroundImage, '100vw')} alt="" />}
           <div className="inner">
             {block.eyebrow && <div className="eyebrow">{block.eyebrow}</div>}
             <h1>{block.title}</h1>
@@ -243,7 +250,7 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
           {hasFg && (
             <img
               className="fg"
-              src={img(block.foregroundImage, 2400)}
+              {...imgSet(block.foregroundImage, '100vw')}
               alt=""
               aria-hidden="true"
             />
@@ -263,7 +270,7 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
     case 'fullbleedPhoto':
       return (
         <FullbleedPhoto
-          src={img(block.image, 2200)}
+          image={block.image}
           caption={block.caption}
           effect={block.scrollEffect}
           gear={block.gearList}
@@ -340,7 +347,7 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
           )}
           {block.winnerImage?.asset && (
             <figure className="award-media">
-              <img src={img(block.winnerImage, 1600)} alt={name} loading="lazy" />
+              <img {...imgSet(block.winnerImage, '(max-width: 720px) 100vw, 700px')} alt={name} loading="lazy" />
               {block.badge?.asset && (
                 <img className="award-badge" src={img(block.badge, 480)} alt="" aria-hidden="true" />
               )}
@@ -362,7 +369,7 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
       return (
         <section className={`verdict overlay-${style}`}>
           {block.backgroundImage?.asset && (
-            <img className="verdict-bg" src={img(block.backgroundImage, 2200)} alt="" loading="lazy" />
+            <img className="verdict-bg" {...imgSet(block.backgroundImage, '100vw')} alt="" loading="lazy" />
           )}
           <div className="verdict-inner">
             <h2>{block.headline || 'Fazit'}</h2>

@@ -37,17 +37,32 @@ function extractUrls(html: string): string[] {
       if (u.protocol === 'http:' || u.protocol === 'https:') urls.add(u.href)
     } catch {}
   }
-  // srcset: "url1 800w, url2 1600w" → nur die URL-Teile
-  const addSrcset = (raw: string | null) => {
+  // srcset → für den Offline-Cache GENAU EINE Auflösung pro Bild wählen (sonst landen alle
+  // ~7 srcset-Stufen im Cache und der Save bläht auf ein Vielfaches auf). Wir nehmen die
+  // Variante, deren Breite ~1200px am nächsten kommt — gerät-neutrale Mittelgröße.
+  // (Die Online-Auslieferung wählt der Browser selbst per srcset; das ist davon getrennt.)
+  const OFFLINE_TARGET_WIDTH = 1200
+  const addBestFromSrcset = (raw: string | null) => {
     if (!raw) return
-    for (const part of raw.split(',')) add(part.trim().split(/\s+/)[0])
+    let best: {url: string; w: number} | null = null
+    for (const part of raw.split(',')) {
+      const [url, descriptor] = part.trim().split(/\s+/)
+      if (!url) continue
+      const w = parseInt(descriptor || '0', 10) || 0
+      if (!best || Math.abs(w - OFFLINE_TARGET_WIDTH) < Math.abs(best.w - OFFLINE_TARGET_WIDTH)) {
+        best = {url, w}
+      }
+    }
+    if (best) add(best.url)
   }
 
   doc.querySelectorAll('img').forEach((el) => {
+    // Nur den src cachen (= die ~1200px-Fallbackgröße aus imgSet), NICHT das ganze srcset —
+    // sonst lädt der Offline-Save alle Auflösungsstufen. Eine Größe pro Bild reicht offline.
     add(el.getAttribute('src'))
-    addSrcset(el.getAttribute('srcset'))
   })
-  doc.querySelectorAll('source').forEach((el) => addSrcset(el.getAttribute('srcset')))
+  // <source> (Cover-Hochformat im <picture>) hat keinen src → eine Stufe aus dem srcset wählen.
+  doc.querySelectorAll('source').forEach((el) => addBestFromSrcset(el.getAttribute('srcset')))
   doc.querySelectorAll('script[src]').forEach((el) => add(el.getAttribute('src')))
   doc.querySelectorAll('link[href]').forEach((el) => {
     const rel = el.getAttribute('rel') || ''

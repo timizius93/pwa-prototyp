@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react'
 import {createPortal} from 'react-dom'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet} from '@/lib/image'
 import {AD_REGISTRY} from './ads/registry'
 
 // Rendert ein Anzeigen-Panel im Swipe-Carousel.
@@ -118,7 +118,7 @@ function StandardAd({data, active}: {data: AdData; active: boolean}) {
                   onClick={() => setLightbox(i)}
                   aria-label={`Bild ${i + 1} öffnen`}
                 >
-                  <img src={urlFor(g).width(600).fit('max').auto('format').url()} alt="" />
+                  <img src={imgUrl(g, 600)} alt="" />
                 </button>
               ))}
             </div>
@@ -144,7 +144,7 @@ function StandardAd({data, active}: {data: AdData; active: boolean}) {
         createPortal(
           <div className="ad-view__lightbox" onClick={() => setLightbox(null)}>
           <img
-            src={urlFor(gallery[lightbox]).width(1800).fit('max').auto('format').url()}
+            src={imgUrl(gallery[lightbox], 1800)}
             alt=""
             onClick={(e) => e.stopPropagation()}
           />
@@ -241,24 +241,22 @@ function AdImageBlock({
       )
     })
 
-  // 2560px Querformat (Master 3840 → scharf bis ~4K); 1600px reicht fürs Hochformat-Phone.
-  const srcLandscape = urlFor(img.image).width(2560).fit('max').auto('format').url()
-  const srcMobile = hasMobile
-    ? urlFor(img.imageMobile).width(1600).fit('max').auto('format').url()
-    : null
+  // srcset (Hebel A): Phone lädt die passende Stufe statt 2560 px. Anzeigen = Vollbild → '100vw'.
+  const setLandscape = imgSet(img.image, '100vw')
+  const setMobile = hasMobile ? imgSet(img.imageMobile, '100vw') : null
 
   return (
     <div className="ad-view__image-block">
       {/* Querformat — Standard; im Hochformat ausgeblendet, FALLS eine Mobil-Variante existiert. */}
       <div className={`ad-view__variant ad-view__variant--landscape${hasMobile ? ' has-mobile' : ''}`}>
-        <img className="ad-view__image" src={srcLandscape} alt={img.altText || ''} />
+        <img className="ad-view__image" {...setLandscape} alt={img.altText || ''} />
         {renderZones(img.clickZones)}
       </div>
 
       {/* Hochformat — nur wenn geliefert; nur im Hochformat sichtbar. */}
-      {hasMobile && srcMobile && (
+      {hasMobile && setMobile && (
         <div className="ad-view__variant ad-view__variant--portrait">
-          <img className="ad-view__image" src={srcMobile} alt={img.altText || ''} />
+          <img className="ad-view__image" {...setMobile} alt={img.altText || ''} />
           {renderZones(img.clickZonesMobile)}
         </div>
       )}

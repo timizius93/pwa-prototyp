@@ -1,16 +1,16 @@
 import Link from 'next/link'
-import {urlFor} from '@/lib/sanity'
+import {imgUrl, imgSet, imgSetCrop} from '@/lib/image'
 import {AD_POSTERS} from './ads/registry'
 import {OfflineSaver} from './OfflineSaver'
 
 function thumb(src: any) {
-  return urlFor(src).width(900).height(600).fit('crop').auto('format').url()
+  return imgSetCrop(src, 900, 600, '(max-width: 720px) 50vw, 320px')
 }
 
 // Anzeigen sind designte Ganzseiten — nicht beschneiden, sondern im natürlichen
 // Seitenverhältnis liefern (Karte zeigt sie per CSS `contain` mit dunklem Rahmen).
 function adThumb(src: any) {
-  return urlFor(src).width(1000).auto('format').url()
+  return imgSet(src, '(max-width: 720px) 50vw, 320px', 1000)
 }
 
 export function Kiosk({data}: {data: any}) {
@@ -18,10 +18,10 @@ export function Kiosk({data}: {data: any}) {
   const articleCount = panels.filter((p: any) => p._panelType !== 'ad').length
 
   const cover = data?.coverImage?.asset
-    ? urlFor(data.coverImage).width(2400).height(1350).fit('crop').auto('format').url()
+    ? imgSetCrop(data.coverImage, 2400, 1350, '100vw')
     : null
   const logo = data?.magazine?.logo?.asset
-    ? urlFor(data.magazine.logo).width(900).auto('format').url()
+    ? imgUrl(data.magazine.logo, 900)
     : null
   const dateLabel = data?.publishDate
     ? new Intl.DateTimeFormat('de-DE', {month: 'long', year: 'numeric'})
@@ -34,7 +34,7 @@ export function Kiosk({data}: {data: any}) {
     <>
       {cover ? (
         <header className="kiosk-cover">
-          <img className="kiosk-cover-bg" src={cover} alt="" aria-hidden />
+          <img className="kiosk-cover-bg" {...cover} alt="" aria-hidden />
           <Link href="/magazine" className="kiosk-up">
             ← Magazine
           </Link>
@@ -73,7 +73,7 @@ export function Kiosk({data}: {data: any}) {
             <Link key={p.slug} href={`/artikel/${p.slug}`} className="card card--ad">
               <div className="card-thumb">
                 {p.thumb?.asset ? (
-                  <img src={adThumb(p.thumb)} alt="" />
+                  <img {...adThumb(p.thumb)} alt="" />
                 ) : p.componentId && AD_POSTERS[p.componentId] ? (
                   <img src={AD_POSTERS[p.componentId]} alt="" />
                 ) : (
@@ -90,7 +90,7 @@ export function Kiosk({data}: {data: any}) {
             <Link key={p.slug} href={`/artikel/${p.slug}`} className="card">
               <div className="card-thumb">
                 {p.thumb?.asset ? (
-                  <img src={thumb(p.thumb)} alt="" />
+                  <img {...thumb(p.thumb)} alt="" />
                 ) : (
                   <div className="card-thumb placeholder" />
                 )}

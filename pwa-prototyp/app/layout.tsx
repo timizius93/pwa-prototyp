@@ -1,6 +1,12 @@
 import type {Metadata, Viewport} from 'next'
 import {ServiceWorkerSetup} from '@/components/ServiceWorkerSetup'
+import {VisualEditingBridge} from '@/components/VisualEditingBridge'
 import './globals.css'
+
+// Live-Preview-Brücke nur lokal/in der Preview-Umgebung laden (NEXT_PUBLIC_SANITY_PREVIEW=true
+// in .env.local). Auf Vercel ist das Flag nicht gesetzt → der Code landet nicht im Bundle,
+// die öffentliche Demo bleibt unberührt.
+const PREVIEW = process.env.NEXT_PUBLIC_SANITY_PREVIEW === 'true'
 
 export const metadata: Metadata = {
   title: 'E-MOUNTAINBIKE — Reader (Pilot)',
@@ -31,6 +37,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       <body>
         <ServiceWorkerSetup />
         {children}
+        {PREVIEW && <VisualEditingBridge />}
       </body>
     </html>
   )

@@ -22,3 +22,6 @@ out/
 
 # Debug-Artefakte (Screenrecordings + extrahierte Frames) — nicht versionieren.
 /Bug/
+
+# Last-Test-Bilder (temporär, 1.4GB — nicht ins Repo)
+pilot-content/loadtest-bilder/

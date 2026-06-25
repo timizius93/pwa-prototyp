@@ -15,6 +15,23 @@ export const fullbleedPhoto = defineType({
     }),
     defineField({name: 'caption', title: 'Bildunterschrift', type: 'localeString'}),
     defineField({
+      name: 'display',
+      title: 'Darstellung',
+      description:
+        'Vollbild = randlos über die ganze Breite (Fotos). Zentriert/Klein = begrenzte Breite, ' +
+        'mittig (für Illustrationen, die nicht die ganze Breite füllen sollen).',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Vollbild (randlos)', value: 'fullbleed'},
+          {title: 'Zentriert, begrenzt', value: 'contained'},
+          {title: 'Klein, zentriert', value: 'small'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'fullbleed',
+    }),
+    defineField({
       name: 'credit',
       title: 'Fotograf',
       type: 'reference',

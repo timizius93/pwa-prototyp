@@ -22,6 +22,15 @@ import {urlFor} from './sanity'
 const SANITY_CDN = 'https://cdn.sanity.io'
 const IMAGE_HOST = process.env.NEXT_PUBLIC_IMAGE_HOST?.trim()
 
+/**
+ * Ist die Bildquelle auflösbar? Platzhalter-Blöcke (Pilot-Inhalt ohne Bild) liefern
+ * `null`/leeres Objekt — dann darf `urlFor()` NICHT aufgerufen werden (wirft sonst
+ * „Unable to resolve image URL from source"). Komponenten prüfen hiermit vor dem <img>.
+ */
+export function hasImage(src: any): boolean {
+  return !!(src && (src.asset || src._ref || src._id || typeof src === 'string'))
+}
+
 /** Tauscht cdn.sanity.io gegen die eigene (Cloudflare-)Domain, falls konfiguriert. */
 export function withImageHost(url: string): string {
   if (!IMAGE_HOST) return url
@@ -34,6 +43,7 @@ export function withImageHost(url: string): string {
  * vom künftigen CDN-Layer profitieren — nicht nur die großen srcset-Bilder.
  */
 export function imgUrl(src: any, width: number): string {
+  if (!hasImage(src)) return '' // Platzhalter ohne Bild → leere URL statt Crash
   return withImageHost(urlFor(src).width(width).fit('max').auto('format').url())
 }
 
@@ -52,6 +62,7 @@ type ImgProps = {src: string; srcSet: string; sizes: string}
  * Viewport-Breite). Direkt aufs <img> spreaden: `<img {...imgSet(src)} alt="" />`.
  */
 export function imgSet(src: any, sizes = '100vw', maxWidth = 2560): ImgProps {
+  if (!hasImage(src)) return {src: '', srcSet: '', sizes}
   const ladder = WIDTHS.filter((w) => w <= maxWidth)
   if (ladder[ladder.length - 1] !== maxWidth) ladder.push(maxWidth)
   return {
@@ -67,6 +78,7 @@ export function imgSet(src: any, sizes = '100vw', maxWidth = 2560): ImgProps {
  * Zuschnitt identisch bleibt und der Browser trotzdem die passende Auflösung wählt.
  */
 export function imgSetCrop(src: any, width: number, height: number, sizes: string): ImgProps {
+  if (!hasImage(src)) return {src: '', srcSet: '', sizes}
   const ratio = height / width
   const url = (w: number) =>
     withImageHost(

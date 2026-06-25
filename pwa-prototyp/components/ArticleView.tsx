@@ -2,7 +2,7 @@
 import {useEffect, useRef} from 'react'
 import Link from 'next/link'
 import {PortableText, type PortableTextComponents} from '@portabletext/react'
-import {imgUrl, imgSet} from '@/lib/image'
+import {imgUrl, imgSet, hasImage} from '@/lib/image'
 import {HotspotImage} from './HotspotImage'
 import {GeometryOverlay} from './GeometryOverlay'
 import {InteractiveBike} from './InteractiveBike'
@@ -62,11 +62,13 @@ function FullbleedPhoto({
   caption,
   effect = 'none',
   gear,
+  display = 'fullbleed',
 }: {
   image: any
   caption?: string
   effect?: string
   gear?: {label?: string; value?: string}[]
+  display?: string
 }) {
   const figRef = useRef<HTMLElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -127,13 +129,25 @@ function FullbleedPhoto({
     }
   }, [effect])
 
-  // Full-bleed = volle Viewport-Breite → sizes '100vw'. Phone lädt ~768–1440 px statt 2200 px.
-  const imgProps = imgSet(image, '100vw')
+  // Platzhalter-Block ohne Bild (Pilot-Inhalt) → nichts rendern statt leeres <img>.
+  if (!hasImage(image)) return null
 
-  // „Keiner": statisches Foto wie früher (variable Höhe, kein fester Rahmen)
-  if (effect !== 'parallax' && effect !== 'scale' && effect !== 'kenBurns') {
+  // Begrenzte Darstellung (Illustration): zentriert, schmaler — kein Scroll-Effekt,
+  // und `sizes` ist kleiner (spart Bandbreite, lädt nicht die Vollbild-Auflösung).
+  const constrained = display === 'contained' || display === 'small'
+  const figClass = `fullbleed${constrained ? ` is-${display}` : ''}`
+  const sizes = display === 'small'
+    ? '(max-width: 720px) 70vw, 420px'
+    : display === 'contained'
+      ? '(max-width: 720px) 100vw, 720px'
+      : '100vw'
+  // Full-bleed = volle Viewport-Breite → sizes '100vw'. Phone lädt ~768–1440 px statt 2200 px.
+  const imgProps = imgSet(image, sizes)
+
+  // „Keiner" ODER begrenzte Darstellung: statisches Foto (variable Höhe, kein fester Rahmen)
+  if (constrained || (effect !== 'parallax' && effect !== 'scale' && effect !== 'kenBurns')) {
     return (
-      <figure className="fullbleed">
+      <figure className={figClass}>
         <div className="fullbleed-static">
           <img {...imgProps} alt={caption || ''} loading="lazy" />
           {gearOverlay}
@@ -206,10 +220,11 @@ function PhotoGrid({images, layout, mirror}: {images: any[]; layout: string; mir
 
   return (
     <div className={`grid grid--${layout}${mirror ? ' grid--mirror' : ''}`} ref={ref}>
-      {images.map((image: any, i: number) => (
-        <div className="grid-cell" key={image._key || i}>
-          <img {...imgSet(image, '(max-width: 720px) 100vw, 50vw')} alt="" loading="lazy" />
-        </div>
+      {images.filter((image: any) => hasImage(image)).map((image: any, i: number) => (
+        <figure className="grid-cell" key={image._key || i}>
+          <img {...imgSet(image, '(max-width: 720px) 100vw, 50vw')} alt={image.caption || ''} loading="lazy" />
+          {image.caption && <figcaption className="grid-caption">{image.caption}</figcaption>}
+        </figure>
       ))}
     </div>
   )
@@ -274,6 +289,7 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
           caption={block.caption}
           effect={block.scrollEffect}
           gear={block.gearList}
+          display={block.display}
         />
       )
     case 'photoGrid': {
@@ -287,6 +303,51 @@ function Block({block, isLead, mirror}: {block: any; isLead: boolean; mirror?: b
           {block.attribution && <div className="attribution">— {block.attribution}</div>}
         </blockquote>
       )
+    case 'highlightBlock': {
+      // Nummerierte Sektionen: grüne Kreis-Ziffern + Titel + Inhalt.
+      if (block.variant === 'numbered') {
+        const items = (block.items || []).filter((it: any) => it?.title || it?.body)
+        return (
+          <div className="highlight highlight--numbered">
+            {block.heading && <h2 className="highlight-heading">{block.heading}</h2>}
+            {block.body?.length > 0 && (
+              <div className="prose highlight-intro">
+                <PortableText value={block.body} components={ptComponents} />
+              </div>
+            )}
+            <ol className="highlight-steps">
+              {items.map((it: any, i: number) => (
+                <li className="highlight-step" key={it._key || i}>
+                  <span className="highlight-num" aria-hidden>{i + 1}</span>
+                  {it.title && <h3 className="highlight-step-title">{it.title}</h3>}
+                  {it.body?.length > 0 && (
+                    <div className="prose">
+                      <PortableText value={it.body} components={ptComponents} />
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )
+      }
+      // Box: gerahmter, zentrierter Kasten mit Überschrift + Inhalt.
+      return (
+        <aside className="highlight highlight--box">
+          {block.heading && (
+            <div className="highlight-box-head">
+              <h2 className="highlight-heading">{block.heading}</h2>
+              <span className="highlight-rule" aria-hidden />
+            </div>
+          )}
+          {block.body?.length > 0 && (
+            <div className="prose highlight-box-body">
+              <PortableText value={block.body} components={ptComponents} />
+            </div>
+          )}
+        </aside>
+      )
+    }
     case 'specLine': {
       const items = [
         block.bikeName,

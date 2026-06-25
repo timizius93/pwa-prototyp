@@ -39,6 +39,7 @@ export const articleEditorial = defineType({
         {type: 'fullbleedPhoto'},
         {type: 'photoGrid'},
         {type: 'pullQuote'},
+        {type: 'highlightBlock'},
       ],
     }),
     defineField({

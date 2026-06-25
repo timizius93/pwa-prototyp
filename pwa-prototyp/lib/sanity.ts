@@ -14,7 +14,15 @@ const builder = createImageUrlBuilder(client)
 export const urlFor = (src: any) => builder.image(src)
 
 // Die Pilot-Ausgabe, die der Kiosk zeigt.
+// Last-Test (nächste Session, Lazy-Mount): hier temporär 'issue-lasttest' setzen + neu bauen.
 export const ISSUE_ID = 'issue-emtb-042'
+
+// --- Sprache (i18n) -------------------------------------------------------
+// Reader-Inhalte sind durchgängig localeString/Text/BlockContent (DE + EN). Der
+// Reader liest die per Cookie gewählte Sprache; jede Projektion fällt mit
+// `coalesce(feld.<lang>, feld.de)` auf Deutsch zurück, wo noch kein EN gepflegt ist.
+export type Lang = 'de' | 'en'
+export const asLang = (v: unknown): Lang => (v === 'en' ? 'en' : 'de')
 
 // Gemeinsame Sortier-Logik: Panels (Artikel + Anzeigen) werden nach `position` gemischt.
 // Items ohne explizite Position landen ans Ende (9999); innerhalb gleicher Position bleibt die
@@ -22,54 +30,68 @@ export const ISSUE_ID = 'issue-emtb-042'
 // Carousel sie genauso adressieren kann wie Artikel.
 const PANEL_ORDER = `order(coalesce(position, 9999) asc, _createdAt asc)`
 
-// Body-Projektion (für beide Artikel-Typen identisch)
-const BODY = `body[]{
+// Body-Projektion pro Sprache (für beide Artikel-Typen identisch).
+// `s()` = einzelnes localeString/Text/BlockContent mit DE-Fallback.
+// `a()` = Array lokalisierter Strings (z. B. tops[]/flops[]/cells[]) — pro Element
+//         kein Fallback, aber die Pilot-Inhalte sind DE+EN geseedet.
+function bodyProjection(l: Lang) {
+  const s = (p: string) => `coalesce(${p}.${l}, ${p}.de)`
+  const a = (p: string) => `${p}[].${l}`
+  return `body[]{
   _type, _key,
-  _type=="titlePage" => { "eyebrow": eyebrow.de, "title": title.de, "subtitle": subtitle.de, "creditByline": creditByline.de, backgroundImage, foregroundImage, coverArtwork, coverArtworkMobile },
-  _type=="articleText" => { "content": content.de },
-  _type=="fullbleedPhoto" => { image, "caption": caption.de, scrollEffect, "gearList": gearList[]{ "label": label.de, value } },
-  _type=="photoGrid" => { layout, images },
-  _type=="pullQuote" => { "text": text.de, attribution },
+  _type=="titlePage" => { "eyebrow": ${s('eyebrow')}, "title": ${s('title')}, "subtitle": ${s('subtitle')}, "creditByline": ${s('creditByline')}, backgroundImage, foregroundImage, coverArtwork, coverArtworkMobile },
+  _type=="articleText" => { "content": ${s('content')} },
+  _type=="fullbleedPhoto" => { image, "caption": ${s('caption')}, display, scrollEffect, "gearList": gearList[]{ "label": ${s('label')}, value } },
+  _type=="photoGrid" => { layout, "images": images[]{ ..., "caption": ${s('caption')} } },
+  _type=="highlightBlock" => {
+    variant,
+    "heading": ${s('heading')},
+    "body": ${s('body')},
+    "items": items[]{ "title": ${s('title')}, "body": ${s('body')} }
+  },
+  _type=="pullQuote" => { "text": ${s('text')}, attribution },
   _type=="specLine" => { bikeName, motor, travelFront_mm, travelRear_mm, weight_kg, weight_size, price_eur, manufacturerLink },
   _type=="hotspotImage" => {
     baseImage,
-    "hotspots": hotspots[]{ _key, x, y, "label": label.de, detailImage, "detailText": detailText.de }
+    "hotspots": hotspots[]{ _key, x, y, "label": ${s('label')}, detailImage, "detailText": ${s('detailText')} }
   },
   _type=="geometryOverlay" => {
     bikePhoto, photographedSize,
     "annotations": annotations[]{ _key, metric, customLabel, x1, y1, x2, y2 },
     "measurements": measurements[]{ _key, size, reach_mm, stack_mm, headAngle_deg, seatAngle_deg, chainstay_mm, wheelbase_mm, topTube_mm, headTube_mm, seatTube_mm },
-    "disclaimer": disclaimer.de
+    "disclaimer": ${s('disclaimer')}
   },
   _type=="interactiveBike" => {
     bikePhoto, photographedSize,
-    "hotspots": hotspots[]{ _key, x, y, "label": label.de, detailImage, "detailText": detailText.de },
+    "hotspots": hotspots[]{ _key, x, y, "label": ${s('label')}, detailImage, "detailText": ${s('detailText')} },
     "annotations": annotations[]{ _key, metric, customLabel, x1, y1, x2, y2 },
     "measurements": measurements[]{ _key, size, reach_mm, stack_mm, headAngle_deg, seatAngle_deg, chainstay_mm, wheelbase_mm, topTube_mm, headTube_mm, seatTube_mm },
-    "disclaimer": disclaimer.de
+    "disclaimer": ${s('disclaimer')}
   },
-  _type=="tuningTip" => { "tip": tip.de },
-  _type=="verdictPanel" => { "headline": headline.de, "verdict": verdict.de, "tops": tops[].de, "flops": flops[].de, backgroundImage, overlayStyle },
+  _type=="tuningTip" => { "tip": ${s('tip')} },
+  _type=="verdictPanel" => { "headline": ${s('headline')}, "verdict": ${s('verdict')}, "tops": ${a('tops')}, "flops": ${a('flops')}, backgroundImage, overlayStyle },
   _type=="comparisonTable" => {
-    "title": title.de,
-    "columns": columns[]{ "label": label.de, unit, numeric },
-    "rows": rows[]{ "cells": cells[].de },
-    "notes": notes.de
+    "title": ${s('title')},
+    "columns": columns[]{ "label": ${s('label')}, unit, numeric },
+    "rows": rows[]{ "cells": ${a('cells')} },
+    "notes": ${s('notes')}
   },
-  _type=="awardBox" => { awardType, "customLabel": customLabel.de, winnerName, winnerImage, badge, "verdict": verdict.de },
+  _type=="awardBox" => { awardType, "customLabel": ${s('customLabel')}, winnerName, winnerImage, badge, "verdict": ${s('verdict')} },
   _type=="testerCarousel" => {
-    "title": title.de,
-    "testers": testers[]->{ _id, name, "role": roleDefault, "bio": bio.de, portrait }
+    "title": ${s('title')},
+    "testers": testers[]->{ _id, name, "role": roleDefault, "bio": ${s('bio')}, portrait }
   },
-  _type=="ctaBlock" => { "headline": headline.de, "buttonLabel": buttonLabel.de, targetUrl }
+  _type=="ctaBlock" => { "headline": ${s('headline')}, "buttonLabel": ${s('buttonLabel')}, targetUrl }
 }`
+}
 
 // Kiosk: Ausgabe + Panels (Artikel UND Anzeigen, gemeinsam sortiert nach `position`).
 // Anzeigen werden mit eigenem `_panelType: 'ad'` markiert, damit der Kiosk sie als AD-Card
 // rendert (mit AD-Badge + Sponsor-Name). Artikel kriegen `_panelType: 'article'`.
-const KIOSK_QUERY = `*[_type=="issue" && _id==$issueId][0]{
+function kioskQuery(l: Lang) {
+  return `*[_type=="issue" && _id==$issueId][0]{
   number,
-  "title": title.de,
+  "title": coalesce(title.${l}, title.de),
   coverImage,
   publishDate,
   "magazine": magazine->{name, primaryColor, logo},
@@ -89,35 +111,41 @@ const KIOSK_QUERY = `*[_type=="issue" && _id==$issueId][0]{
     },
     _type in ["articleEditorial","article"] => {
       "_panelType": "article",
-      "title": title_mag.de,
+      "title": coalesce(title_mag.${l}, title_mag.de),
       "category": coalesce(category, select(_type=="articleEditorial" => "Editorial")),
       "slug": slug.current,
       "thumb": coalesce(heroImage, body[_type=="fullbleedPhoto"][0].image, body[_type=="titlePage"][0].backgroundImage)
     }
   }
 }`
+}
 
 // Ein Artikel per Slug (funktioniert für Editorial UND generischen Artikel).
-const ARTICLE_QUERY = `*[defined(slug.current) && slug.current==$slug][0]{
+function articleQuery(l: Lang) {
+  return `*[defined(slug.current) && slug.current==$slug][0]{
   _type,
-  "title": title_mag.de,
+  "title": coalesce(title_mag.${l}, title_mag.de),
   "category": coalesce(category, select(_type=="articleEditorial" => "Editorial")),
   "author": author->name,
-  "signature": signature.de,
+  "signature": coalesce(signature.${l}, signature.de),
   "magazine": magazine->{name, primaryColor},
-  "issue": issue->{number, "title": title.de},
-  ${BODY}
+  "issue": issue->{number, "title": coalesce(title.${l}, title.de)},
+  ${bodyProjection(l)}
 }`
+}
 
 // Reihenfolge der Slugs in der Ausgabe — für „vorheriger / nächster Artikel".
-const NAV_QUERY = `*[_type in ["articleEditorial","article"] && issue._ref==$issueId] | ${PANEL_ORDER}{
-  "title": title_mag.de,
+function navQuery(l: Lang) {
+  return `*[_type in ["articleEditorial","article"] && issue._ref==$issueId] | ${PANEL_ORDER}{
+  "title": coalesce(title_mag.${l}, title_mag.de),
   "slug": slug.current
 }`
+}
 
 // ALLE Panels der Ausgabe (Artikel + Anzeigen) mit vollem Inhalt — fürs Swipe-Carousel.
 // Anzeigen kommen mit `_panelType: 'ad'` und Standard- ODER Custom-Mode-Feldern.
-const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
+function issuePanelsQuery(l: Lang) {
+  return `*[_type=="issue" && _id==$issueId][0]{
   "panels": *[
     (
       (_type in ["articleEditorial","article"] && defined(slug.current))
@@ -135,7 +163,7 @@ const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
       "componentId": componentId,
       "thumb": images[0].image,
       "magazine": magazine->{name, primaryColor},
-      "issue": issue->{number, "title": title.de},
+      "issue": issue->{number, "title": coalesce(title.${l}, title.de)},
       "images": images[]{
         _key,
         image,
@@ -149,17 +177,18 @@ const ISSUE_PANELS_FULL = `*[_type=="issue" && _id==$issueId][0]{
     _type in ["articleEditorial","article"] => {
       "_panelType": "article",
       "slug": slug.current,
-      "title": title_mag.de,
+      "title": coalesce(title_mag.${l}, title_mag.de),
       "category": coalesce(category, select(_type=="articleEditorial" => "Editorial")),
       "author": author->name,
-      "signature": signature.de,
+      "signature": coalesce(signature.${l}, signature.de),
       "thumb": coalesce(heroImage, body[_type=="fullbleedPhoto"][0].image, body[_type=="titlePage"][0].coverArtwork, body[_type=="titlePage"][0].backgroundImage),
       "magazine": magazine->{name, primaryColor},
-      "issue": issue->{number, "title": title.de},
-      ${BODY}
+      "issue": issue->{number, "title": coalesce(title.${l}, title.de)},
+      ${bodyProjection(l)}
     }
   }
 }`
+}
 
 // 41-Publishing-Regal: alle Magazine in Sanity + ihre jeweils neueste LESBARE Ausgabe
 // (Kachel-Cover + „Aktuelle Ausgabe"-Pill). Lesbar = hat Artikel — Platzhalter-Ausgaben
@@ -199,23 +228,23 @@ export async function getMagazineIssues(slug: string) {
   return client.fetch(MAGAZINE_ISSUES_QUERY, {slug})
 }
 
-export async function getKiosk() {
-  return client.fetch(KIOSK_QUERY, {issueId: ISSUE_ID})
+export async function getKiosk(lang: Lang = 'de') {
+  return client.fetch(kioskQuery(lang), {issueId: ISSUE_ID})
 }
 
-export async function getArticle(slug: string) {
-  return client.fetch(ARTICLE_QUERY, {slug})
+export async function getArticle(slug: string, lang: Lang = 'de') {
+  return client.fetch(articleQuery(lang), {slug})
 }
 
 // Liefert ALLE Panels (Artikel + Anzeigen) der Pilot-Ausgabe mit vollem Inhalt,
 // gemischt nach `position`. Jedes Panel hat `_panelType: 'article' | 'ad'`.
-export async function getIssuePanels() {
-  const res = await client.fetch(ISSUE_PANELS_FULL, {issueId: ISSUE_ID})
+export async function getIssuePanels(lang: Lang = 'de') {
+  const res = await client.fetch(issuePanelsQuery(lang), {issueId: ISSUE_ID})
   return res?.panels ?? []
 }
 
-export async function getNav(slug: string) {
-  const items: {title: string; slug: string}[] = await client.fetch(NAV_QUERY, {issueId: ISSUE_ID})
+export async function getNav(slug: string, lang: Lang = 'de') {
+  const items: {title: string; slug: string}[] = await client.fetch(navQuery(lang), {issueId: ISSUE_ID})
   const list = items.filter((a) => a.slug)
   const i = list.findIndex((a) => a.slug === slug)
   return {

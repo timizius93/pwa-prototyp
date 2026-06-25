@@ -24,10 +24,18 @@ export const photoGrid = defineType({
       name: 'images',
       title: 'Bilder',
       type: 'array',
-      // Reine Bild-Liste: ermöglicht das Reinziehen mehrerer Dateien auf einmal (ein Drop = mehrere Items).
-      // Per-Bild-Unterschrift/Fotograf bewusst weggelassen (im Editorial nicht gebraucht).
-      // Falls ein späterer Artikel Captions pro Grid-Bild braucht, hier als Objekt-Variante wieder einführbar.
-      of: [{type: 'image', options: {hotspot: true}}],
+      // Bild + optionale Unterschrift pro Kachel. Mehrere Dateien lassen sich weiterhin in einem
+      // Rutsch reinziehen (ein Drop = mehrere Items); die Caption bleibt leer, wenn nicht gebraucht
+      // (z. B. im Editorial). Bestehende Grids ohne Caption bleiben gültig.
+      of: [
+        {
+          type: 'image',
+          options: {hotspot: true},
+          fields: [
+            defineField({name: 'caption', title: 'Bildunterschrift', type: 'localeString'}),
+          ],
+        },
+      ],
     }),
   ],
   preview: {

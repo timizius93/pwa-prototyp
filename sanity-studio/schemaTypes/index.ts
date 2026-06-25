@@ -19,6 +19,7 @@ import {articleText} from './components/articleText'
 import {fullbleedPhoto} from './components/fullbleedPhoto'
 import {photoGrid} from './components/photoGrid'
 import {pullQuote} from './components/pullQuote'
+import {highlightBlock} from './components/highlightBlock'
 // Einzeltest-Bausteine (Nicolai S18 SWIFT)
 import {specLine} from './components/specLine'
 import {tuningTip} from './components/tuningTip'
@@ -53,6 +54,7 @@ export const schemaTypes = [
   fullbleedPhoto,
   photoGrid,
   pullQuote,
+  highlightBlock,
   specLine,
   tuningTip,
   ctaBlock,

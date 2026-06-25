@@ -6,7 +6,10 @@ import {ArticleView} from './ArticleView'
 import {AdView} from './AdView'
 import {AD_POSTERS} from './ads/registry'
 import {urlFor} from '@/lib/sanity'
+import type {Lang} from '@/lib/sanity'
+import {ui} from '@/lib/ui-strings'
 import {withImageHost} from '@/lib/image'
+import {LangToggle} from './LangToggle'
 
 // Lücke zwischen den Panels (wie der weiße Rand zwischen Fotos in der iPhone-Fotos-App)
 const GAP = 24
@@ -17,10 +20,13 @@ const GAP = 24
 export function ArticleCarousel({
   panels,
   startIndex,
+  lang = 'de',
 }: {
   panels: any[]
   startIndex: number
+  lang?: Lang
 }) {
+  const t = ui(lang)
   const articles = panels // alte Variable umgemappt — der gesamte Drag/Drop-Code unten ist neutral
   const [index, setIndex] = useState(startIndex)
   const [dragX, setDragX] = useState(0)
@@ -46,7 +52,7 @@ export function ArticleCarousel({
     const a = articles[index]
     if (!a || typeof window === 'undefined') return
     const url = `${window.location.origin}/artikel/${a.slug || ''}`
-    const title = a._panelType === 'ad' ? `Anzeige · ${a.sponsor || ''}`.trim() : a.title
+    const title = a._panelType === 'ad' ? `${t.ad} · ${a.sponsor || ''}`.trim() : a.title
     try {
       if (navigator.share) await navigator.share({title, url})
       else await navigator.clipboard?.writeText(url)
@@ -189,7 +195,7 @@ export function ArticleCarousel({
 
           // Nav-Titel-Fallback: Anzeigen haben kein `title`, also „Anzeige · <Sponsor>"
           const navTitle = (p: any) =>
-            p._panelType === 'ad' ? `Anzeige · ${p.sponsor || ''}`.trim() : p.title
+            p._panelType === 'ad' ? `${t.ad} · ${p.sponsor || ''}`.trim() : p.title
           const prev = i > 0 ? {slug: articles[i - 1].slug, title: navTitle(articles[i - 1])} : null
           const next =
             i < articles.length - 1
@@ -227,14 +233,15 @@ export function ArticleCarousel({
         const overCover = hasCoverHero && !pastHero[index]
         return (
           <div className={`masthead${isAd || overCover ? ' is-overlay' : ''}`}>
-            <Link href="/" className="brand back" aria-label="Zurück zum Kiosk">
+            <Link href="/" className="brand back" aria-label={t.backToKiosk}>
               ← <span className="brand-name">{cur.magazine?.name || 'E-MOUNTAINBIKE'}</span>
             </Link>
             {/* Über dem Cover bleibt der Titel ausgeblendet (sonst doppelt mit dem Cover-Titel) */}
             <span className={`masthead-title${overCover ? ' is-hidden' : ''}`}>
               {isAd ? cur.sponsor : cur.title}
             </span>
-            <span className="issue">{isAd ? 'Anzeige' : cur.category || ''}</span>
+            <span className="issue">{isAd ? t.ad : cur.category || ''}</span>
+            <LangToggle lang={lang} variant={isAd || overCover ? 'overlay' : 'bar'} />
           </div>
         )
       })()}
@@ -245,7 +252,7 @@ export function ArticleCarousel({
         <button
           type="button"
           className="carousel-nav-arrow prev"
-          aria-label="Vorheriger Beitrag"
+          aria-label={t.prevItem}
           disabled={index === 0}
           onClick={() => goTo(index - 1)}
         />
@@ -263,7 +270,7 @@ export function ArticleCarousel({
         <button
           type="button"
           className="carousel-nav-arrow next"
-          aria-label="Nächster Beitrag"
+          aria-label={t.nextItem}
           disabled={index === articles.length - 1}
           onClick={() => goTo(index + 1)}
         />
@@ -323,7 +330,7 @@ export function ArticleCarousel({
               {articles.map((p, i) => {
                 const isAd = p._panelType === 'ad'
                 const title = isAd ? p.sponsor : p.title
-                const label = isAd ? 'Anzeige' : p.category
+                const label = isAd ? t.ad : p.category
                 // Custom-Ads haben keine Sanity-`thumb` → Poster aus der Registry verwenden.
                 const thumbSrc = p.thumb
                   ? withImageHost(urlFor(p.thumb).width(480).height(320).fit('crop').auto('format').url())

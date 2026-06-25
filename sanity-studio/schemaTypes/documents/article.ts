@@ -54,6 +54,7 @@ export const article = defineType({
         {type: 'fullbleedPhoto'},
         {type: 'photoGrid'},
         {type: 'pullQuote'},
+        {type: 'highlightBlock'},
         {type: 'specLine'},
         {type: 'hotspotImage'},
         {type: 'geometryOverlay'},

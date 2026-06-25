@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import {imgUrl, imgSet, imgSetCrop} from '@/lib/image'
+import type {Lang} from '@/lib/sanity'
+import {ui} from '@/lib/ui-strings'
 import {AD_POSTERS} from './ads/registry'
 import {OfflineSaver} from './OfflineSaver'
+import {LangToggle} from './LangToggle'
 
 function thumb(src: any) {
   return imgSetCrop(src, 900, 600, '(max-width: 720px) 50vw, 320px')
@@ -13,7 +16,8 @@ function adThumb(src: any) {
   return imgSet(src, '(max-width: 720px) 50vw, 320px', 1000)
 }
 
-export function Kiosk({data}: {data: any}) {
+export function Kiosk({data, lang = 'de'}: {data: any; lang?: Lang}) {
+  const t = ui(lang)
   const panels = (data?.panels || []).filter((p: any) => p.slug)
   const articleCount = panels.filter((p: any) => p._panelType !== 'ad').length
 
@@ -24,7 +28,7 @@ export function Kiosk({data}: {data: any}) {
     ? imgUrl(data.magazine.logo, 900)
     : null
   const dateLabel = data?.publishDate
-    ? new Intl.DateTimeFormat('de-DE', {month: 'long', year: 'numeric'})
+    ? new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'de-DE', {month: 'long', year: 'numeric'})
         .format(new Date(data.publishDate))
         .toUpperCase()
     : null
@@ -38,11 +42,12 @@ export function Kiosk({data}: {data: any}) {
           <Link href="/magazine" className="kiosk-up">
             ← Magazine
           </Link>
+          <LangToggle lang={lang} variant="overlay" />
           <div className="kiosk-cover-logo">
             {logo ? <img src={logo} alt={magName} /> : <span>{magName}</span>}
           </div>
           <div className="kiosk-cover-foot">
-            <p className="kiosk-cover-sub">{articleCount} Artikel in dieser Ausgabe</p>
+            <p className="kiosk-cover-sub">{t.articlesInIssue(articleCount)}</p>
             <div className="kiosk-cover-meta">
               <div className="kiosk-cover-issue">
                 <span className="kc-num">#{String(data?.number).padStart(3, '0')}</span>
@@ -57,9 +62,10 @@ export function Kiosk({data}: {data: any}) {
           <Link href="/magazine" className="kiosk-up kiosk-up--dark">
             ← Magazine
           </Link>
+          <LangToggle lang={lang} variant="bar" />
           <div className="eyebrow">{magName}</div>
           <h1>#{data?.number} — {data?.title}</h1>
-          <p className="kiosk-sub">{articleCount} Artikel in dieser Ausgabe</p>
+          <p className="kiosk-sub">{t.articlesInIssue(articleCount)}</p>
         </header>
       )}
 
@@ -82,7 +88,7 @@ export function Kiosk({data}: {data: any}) {
                 <div className="card-ad-badge" aria-label="Werbung">AD</div>
               </div>
               <div className="card-body">
-                <div className="card-cat">Anzeige</div>
+                <div className="card-cat">{t.ad}</div>
                 <div className="card-title">{p.sponsor}</div>
               </div>
             </Link>

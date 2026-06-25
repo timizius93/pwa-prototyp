@@ -1,4 +1,5 @@
 import {defineType, defineField} from 'sanity'
+import {validateIssueMatchesMagazine} from '../lib/validateIssueMagazine'
 
 // Werbe-Anzeige als eigener Dokumenttyp. Mischt sich im Reader-Carousel zwischen die Artikel
 // derselben Ausgabe — Sortierung über das gemeinsame `position`-Feld (kleine Zahl = früher).
@@ -100,7 +101,7 @@ export const advertisement = defineType({
       type: 'reference',
       to: [{type: 'issue'}],
       group: 'meta',
-      validation: (r) => r.required(),
+      validation: (r) => r.required().custom(validateIssueMatchesMagazine()),
     }),
     defineField({
       name: 'position',

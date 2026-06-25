@@ -149,7 +149,7 @@ function issuePanelsQuery(l: Lang) {
   "panels": *[
     (
       (_type in ["articleEditorial","article"] && defined(slug.current))
-      || _type=="advertisement"
+      || (_type=="advertisement" && (!defined(language) || language=="both" || language=="${l}"))
     )
     && issue._ref==^._id
   ] | ${PANEL_ORDER} {

@@ -1,4 +1,5 @@
 import {defineType, defineField} from 'sanity'
+import {validateIssueMatchesMagazine} from '../lib/validateIssueMagazine'
 
 // Generischer Artikel (Test, Reportage, News, Inspiration …) — nutzt dieselben Body-Bausteine
 // wie das Editorial. Bewusst schlank gehalten; spezialisierte Typen (Einzeltest mit Specs/Geometrie,
@@ -81,6 +82,7 @@ export const article = defineType({
       type: 'reference',
       to: [{type: 'issue'}],
       group: 'meta',
+      validation: (r) => r.required().custom(validateIssueMatchesMagazine()),
     }),
     defineField({
       name: 'position',
@@ -91,6 +93,7 @@ export const article = defineType({
         'Bestimmt die Reihenfolge im Reader-Carousel (kleiner = früher). Teilt sich den Werteraum ' +
         'mit den Anzeigen derselben Ausgabe — Anzeigen werden über ihre `position` zwischen die ' +
         'Artikel geschoben. Tipp: Schritte von 10.',
+      validation: (r) => r.required(),
     }),
     defineField({
       name: 'slug',
@@ -98,6 +101,7 @@ export const article = defineType({
       type: 'slug',
       options: {source: (doc: {title_mag?: {de?: string}}) => doc.title_mag?.de},
       group: 'meta',
+      validation: (r) => r.required(),
     }),
     defineField({
       name: 'status',

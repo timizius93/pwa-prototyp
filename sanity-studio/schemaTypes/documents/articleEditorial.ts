@@ -1,4 +1,5 @@
 import {defineType, defineField} from 'sanity'
+import {validateIssueMatchesMagazine} from '../lib/validateIssueMagazine'
 
 // Editorial — persönliche Einleitung des Heft-Gründers (z. B. „Run, Forrest, run!").
 // Der einfachste der drei Pilot-Artikel: Header + freier Body aus Bausteinen + Signatur.
@@ -65,6 +66,7 @@ export const articleEditorial = defineType({
       type: 'reference',
       to: [{type: 'issue'}],
       group: 'meta',
+      validation: (r) => r.required().custom(validateIssueMatchesMagazine()),
     }),
     defineField({
       name: 'position',
@@ -74,6 +76,7 @@ export const articleEditorial = defineType({
       description:
         'Reihenfolge im Reader-Carousel (kleiner = früher). Teilt sich den Werteraum ' +
         'mit den Anzeigen derselben Ausgabe.',
+      validation: (r) => r.required(),
     }),
     defineField({
       name: 'category',
@@ -95,6 +98,7 @@ export const articleEditorial = defineType({
       type: 'slug',
       options: {source: (doc: {title_mag?: {de?: string}}) => doc.title_mag?.de},
       group: 'meta',
+      validation: (r) => r.required(),
     }),
     defineField({
       name: 'photographers',
